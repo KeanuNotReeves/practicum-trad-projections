@@ -7,45 +7,77 @@ library(party)
 library(neuralnet)
 library(h2o)
 library(dummies)
+library(dummy)
+
 #bring in the 15FA data
 X15FA <- as.data.frame(read_excel("D:/Practicum/Project Data/15FA/15FA Final.xlsx",sheet = "15FA"))
 
-#set variables
-#X15FA$Gender <- as.factor(X15FA$Gender)
-#X15FA$Ethnic <- as.factor(X15FA$Ethnic)
-#X15FA$Religion <- as.factor(X15FA$Religion)
-#X15FA$`Career Goals` <- as.factor(X15FA$`Career Goals`)
-#X15FA$`FA Intent` <- as.factor(X15FA$`FA Intent`)
-#X15FA$`First Gen` <- as.factor(X15FA$`First Gen`)
-#X15FA$`HS Type` <- as.factor(X15FA$`HS Type`)
-#X15FA$`Res Stat` <- as.factor(X15FA$`Res Stat`)
-#X15FA$Visit <- as.factor(X15FA$Visit)
-#X15FA$`Pre-Reg` <- as.factor(X15FA$`Pre-Reg`)
-#X15FA$`Housing Desired` <- as.factor(X15FA$`Housing Desired`)
-#X15FA$Legacy <- as.factor(X15FA$Legacy)
-#X15FA$Enroll <- as.numeric(X15FA$Enroll)
-#X15FA$`Regis Position` <- as.factor(X15FA$`Regis Position`)
+#set variable types
+X15FA$Gender <- as.factor(X15FA$Gender)
+X15FA$Ethnic <- as.factor(X15FA$Ethnic)
+X15FA$Religion <- as.factor(X15FA$Religion)
+X15FA$Career_Goals <- as.factor(X15FA$Career_Goals)
+X15FA$FA_Intent <- as.factor(X15FA$FA_Intent)
+X15FA$First_Gen <- as.factor(X15FA$First_Gen)
+X15FA$HS_Type <- as.factor(X15FA$HS_Type)
+X15FA$Visit <- as.factor(X15FA$Visit)
+X15FA$Rating <- as.factor(X15FA$Rating)
+X15FA$Housing_Desired <- as.factor(X15FA$Housing_Desired)
+X15FA$Legacy <- as.factor(X15FA$Legacy)
+X15FA$Enroll <- as.factor(X15FA$Enroll)
+X15FA$Regis_Position <- as.factor(X15FA$Regis_Position)
 
 
 #perform EDA on the dataset
 str(X15FA)
 summary(X15FA)
-X15FA1 <- dummy.data.frame(X15FA, names = NULL)
-hist(X15FA$CompositeScore, main = "Composite Score Distribution", xlab = "Composite Score", ylab = "Number of Students")
-hist(X15FA$DistanceFromCampus, main = "Distance From Campus Distribution", xlab = "Distance (miles)", ylab = "Number of Students")
+hist(X15FA$Composite_Score, main = "Composite Score Distribution", xlab = "Composite Score", ylab = "Number of Students")
+hist(X15FA$Distance, main = "Distance From Campus Distribution", xlab = "Distance (miles)", ylab = "Number of Students")
 
 #Clean the data, removing or replacing NA's
-which((is.na(X15FA$HSGPA)))
-X15FA$HSGPA[c(318,915,1967,2563,2669,3209)] <- median(X15FA$HSGPA, na.rm = TRUE)
+which((is.na(X15FA$GPA)))
+X15FA$GPA[c(428,1666,2067,2384,2508,3135)] <- median(X15FA$GPA, na.rm = TRUE)
+which((is.na(X15FA$GPA)))
 
-which(is.na(X15FA$DistanceFromCampus))
-X15FA$DistanceFromCampus[c(4,32,38,99,291,318,367,552,736,799,904,915,958,1063,1191,1333,1363,1419,1471,1602,1676,1799,1967,1989,2018,2241,2250,2254,2329,2335,2393,2453,2593,2669,2763,2964,2965,3027,3254,3256,3288,3457)] <- max(X15FA$DistanceFromCampus, na.rm = TRUE)
+which(is.na(X15FA$Distance))
+X15FA$Distance[c(6,30,200,224,252,293,416,428,480,598,742,749,918,949,1015,1076,1231,1321,1466,1666,1693,1730,1936,2002,2014,2018,2067,2105,2112,2182,2249,2382,2415,2508,2618,2850,2851,2927,3184,3186,3222,3421)] <- max(X15FA$Distance, na.rm = TRUE)
+which(is.na(X15FA$Distance))
 
-X15FA$`HSRank%` <- NULL
+which(is.na(X15FA$Career_Goals))
+X15FA$Career_Goals[c(556,851,1092,1310,1874,2013,2180,2980,3331,3335)] <- "UND"
+which(is.na(X15FA$Career_Goals))
+
+which(is.na(X15FA$State))
+X15FA$State[c(6,224,252,1076,1231,1466,1620,1666,1693,1730,1802,1936,2002,2014,2018,2067,2105,2249,2916)] <- "International"
+which(is.na(X15FA$State))
+X15FA$State <- as.factor(X15FA$State)
+
+#remove the columns with majority missing values
+X15FA$`HS_Rank_%` <- NULL
+X15FA$Student_AGI <- NULL
+X15FA$EFC <- NULL
+
 summary(X15FA)
 
+#set variable types for PCA
+NUM15FA <- X15FA
+NUM15FA$Gender <- as.numeric(NUM15FA$Gender)
+NUM15FA$Ethnic <- as.numeric(NUM15FA$Ethnic)
+NUM15FA$Religion <- as.numeric(NUM15FA$Religion)
+NUM15FA$Career_Goals <- as.numeric(NUM15FA$Career_Goals)
+NUM15FA$FA_Intent <- as.numeric(NUM15FA$FA_Intent)
+NUM15FA$First_Gen <- as.numeric(NUM15FA$First_Gen)
+NUM15FA$HS_Type <- as.numeric(NUM15FA$HS_Type)
+NUM15FA$Visit <- as.numeric(NUM15FA$Visit)
+NUM15FA$Rating <- as.numeric(NUM15FA$Rating)
+NUM15FA$Housing_Desired <- as.numeric(NUM15FA$Housing_Desired)
+NUM15FA$Legacy <- as.numeric(NUM15FA$Legacy)
+NUM15FA$Enroll <- as.numeric(NUM15FA$Enroll)
+NUM15FA$Regis_Position <- as.numeric(NUM15FA$Regis_Position)
+NUM15FA$State <- as.numeric(NUM15FA$State)
+
 #Principle Component Analysis
-sub <- subset(X15FA,select = -c(Index, Enroll))
+sub <-subset(NUM15FA,select = -c(ID, Enroll))
 pca <- prcomp(sub, scale. = T)
 pca$rotation
 dim(pca$x)
@@ -55,6 +87,8 @@ pca_var <- std_dev^2
 prop_varex <- pca_var/sum(pca_var)
 plot(prop_varex, xlab = "Principal Component", ylab = "Proportion of Variance Explained", type = "b")
 plot(cumsum(prop_varex), xlab = "Principal Component", ylab = "Cumulative Proportion of Variance Explained", type = "b")
+
+
 
 #split the data into training & testing
 ind <- sample(2, nrow(X15FA), replace = TRUE, prob = c(0.8,0.2))
@@ -70,17 +104,20 @@ confusionMatrix(predLR, reference = X15FA$Enroll, positive = "1")
 
 #bagging & boosting.
 #bagging method
+set.seed(4321)
 train15FA$Enroll <- as.factor(train15FA$Enroll)
 test15FA$Enroll <- as.factor(test15FA$Enroll)
 X15FA.bagg <- bagging(Enroll ~ ., data = train15FA, mfinal = 10)
 X15FA.bagg$importance
 
 #test
+set.seed(4321)
 X15FA.predbagging <- predict.bagging(X15FA.bagg, newdata = test15FA)
 X15FA.predbagging$confusion
 X15FA.predbagging$error
 
 #10-fold cross validation
+set.seed(4321)
 X15FA.baggingcv <- bagging.cv(Enroll ~., v=10, data = X15FA, mfinal = 100)
 X15FA.baggingcv$confusion
 X15FA.baggingcv$error
@@ -93,6 +130,7 @@ X15FA.predboost$confusion
 X15FA.predboost$error
 
 #boosting with cross validation
+set.seed(4321)
 X15FA.boostcv <- boosting.cv(Enroll~., v=10, data = X15FA, mfinal=100)
 X15FA.boostcv$confusion
 X15FA.boostcv$error
@@ -116,6 +154,7 @@ confusionMatrix(table(test15FA$Enroll, predCI))
 
 
 #SVM
+set.seed(4321)
 SVM15FA <- svm(Enroll ~ ., data = train15FA, kernel = "radial", cost = 1, gamma = 1/ncol(train15FA))
 summary(SVM15FA)
 SVMpred <- predict(SVM15FA, test15FA[, !names(test15FA) %in% c("Enroll")])
@@ -127,7 +166,8 @@ confusionMatrix(svm.table)
 plot(SVM15FA, train15FA, Enroll ~ ., slice = list(Enroll = 2))
 
 
-#deep learning?
+#neural network with neuralnet package
+set.seed(4321)
 train15FA$EnrollYes <- train15FA$Enroll == 1
 train15FA$EnrollNo <- train15FA$Enroll == 2
 network <- neuralnet(EnrollYes + EnrollNo ~ HSType + DistanceFromCampus + HSGPA + Visit + RegisPosition + FAFSASubmission, data = train15FA, hidden = 3)
@@ -138,7 +178,7 @@ net.prediction <- c("EnrollYes", "EnrollNo")[apply(net.predict, 1, which.max)]
 predict.table <- table(test15FA$Enroll, net.prediction)
 predict.table
 
-
+#Neurl network with H2O package
 #start h20 instance
 localH2O <- h2o.init(ip = "localhost", port = 54321, startH2O = TRUE)
 pathtodata <- paste0(normalizePath("D:/Practicum/Project Data/15FA/"),"/15FA Final Data.xlsx", sheet = "Final 2")

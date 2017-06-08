@@ -8,6 +8,7 @@ library(neuralnet)
 library(h2o)
 library(dummies)
 library(dummy)
+library(party)
 
 #bring in the 15FA data
 X15FA <- as.data.frame(read_excel("D:/Practicum/Project Data/15FA/15FA Final.xlsx",sheet = "15FA"))
@@ -97,47 +98,47 @@ test15FA <- X15FA[ind==2,]
 
 
 #build a linear regression model
-train15FA$Enroll <- as.factor(train15FA$Enroll)
-reg15FA <- lm(formula= Enroll ~ ., data = train15FA)
-predLR <- predict.lm(reg15FA, newdata = test15FA, interval = "predict")
-confusionMatrix(predLR, reference = X15FA$Enroll, positive = "1")
+#train15FA$Enroll <- as.factor(train15FA$Enroll)
+#reg15FA <- lm(formula= Enroll ~ ., data = train15FA)
+#predLR <- predict.lm(reg15FA, newdata = test15FA, interval = "predict")
+#confusionMatrix(predLR, reference = X15FA$Enroll, positive = "1")
 
 #bagging & boosting.
 #bagging method
-set.seed(4321)
+set.seed(1)
 train15FA$Enroll <- as.factor(train15FA$Enroll)
 test15FA$Enroll <- as.factor(test15FA$Enroll)
 X15FA.bagg <- bagging(Enroll ~ ., data = train15FA, mfinal = 10)
 X15FA.bagg$importance
 
 #test
-set.seed(4321)
+set.seed(2)
 X15FA.predbagging <- predict.bagging(X15FA.bagg, newdata = test15FA)
 X15FA.predbagging$confusion
 X15FA.predbagging$error
 
 #10-fold cross validation
-set.seed(4321)
+set.seed(3)
 X15FA.baggingcv <- bagging.cv(Enroll ~., v=10, data = X15FA, mfinal = 100)
 X15FA.baggingcv$confusion
 X15FA.baggingcv$error
 
 #boosting method
-set.seed(4321)
+set.seed(4)
 X15FA.boost <- boosting(Enroll ~., data = train15FA, mfinal=10, coeflearn = "Breiman", control = rpart.control(maxdepth = 3))
 X15FA.predboost <- predict.boosting(X15FA.boost, newdata = test15FA)
 X15FA.predboost$confusion
 X15FA.predboost$error
 
 #boosting with cross validation
-set.seed(4321)
+set.seed(5)
 X15FA.boostcv <- boosting.cv(Enroll~., v=10, data = X15FA, mfinal=100)
 X15FA.boostcv$confusion
 X15FA.boostcv$error
 
 
 #build a random forest.
-set.seed(1234)
+set.seed(6)
 rf <- randomForest(as.factor(Enroll) ~ ., data=train15FA, importance=TRUE, ntree=2000)
 varImpPlot(rf)
 PredRF <- predict(rf, test15FA, type = "class")
@@ -145,38 +146,37 @@ confusionMatrix(table(test15FA$Enroll, PredRF))
 min(rf$err.rate)
 
 #conditional inference tree
-library(party)
-set.seed(1234)
+set.seed(7)
 CItree <- ctree(Enroll ~., data = train15FA)
 CItree
 predCI <- predict(CItree, test15FA)
-confusionMatrix(table(test15FA$Enroll, predCI))
+confusionMatrix(table(test15FA$Enroll, predCI), positive = "Yes")
 
 
 #SVM
-set.seed(4321)
+set.seed(8)
 SVM15FA <- svm(Enroll ~ ., data = train15FA, kernel = "radial", cost = 1, gamma = 1/ncol(train15FA))
 summary(SVM15FA)
 SVMpred <- predict(SVM15FA, test15FA[, !names(test15FA) %in% c("Enroll")])
 svm.table <- table(SVMpred, test15FA$Enroll)
 svm.table
 classAgreement(svm.table)
-confusionMatrix(svm.table)
+confusionMatrix(svm.table, positive = "Yes")
 
 plot(SVM15FA, train15FA, Enroll ~ ., slice = list(Enroll = 2))
 
 
 #neural network with neuralnet package
-set.seed(4321)
-train15FA$EnrollYes <- train15FA$Enroll == 1
-train15FA$EnrollNo <- train15FA$Enroll == 2
-network <- neuralnet(EnrollYes + EnrollNo ~ HSType + DistanceFromCampus + HSGPA + Visit + RegisPosition + FAFSASubmission, data = train15FA, hidden = 3)
-network$result.matrix
-plot(network)
-net.predict <- compute(network, test15FA[-17])$net.result
-net.prediction <- c("EnrollYes", "EnrollNo")[apply(net.predict, 1, which.max)]
-predict.table <- table(test15FA$Enroll, net.prediction)
-predict.table
+#set.seed(8)
+#train15FA$EnrollYes <- train15FA$Enroll == "Yes"
+#train15FA$EnrollNo <- train15FA$Enroll == "No"
+#network <- neuralnet(EnrollYes + EnrollNo ~ HSType + DistanceFromCampus + HSGPA + Visit + RegisPosition + FAFSASubmission, data = train15FA, hidden = 3)
+#network$result.matrix
+#plot(network)
+#net.predict <- compute(network, test15FA[-17])$net.result
+#net.prediction <- c("EnrollYes", "EnrollNo")[apply(net.predict, 1, which.max)]
+#predict.table <- table(test15FA$Enroll, net.prediction)
+#predict.table
 
 #Neurl network with H2O package
 #start h20 instance
@@ -188,8 +188,8 @@ h2o.describe(dat_h2o)
 
 
 #model1 with a deep learning network (three layers of 50 nodes)
-model1 <- h2o.deeplearning(x=1:9,
-                           y=10,
+model1 <- h2o.deeplearning(x=2:18,
+                           y=19,
                            training_frame = dat_h2o,
                            activation = "RectifierWithDropout",
                            input_dropout_ratio = 0.2,
@@ -200,8 +200,8 @@ model1 <- h2o.deeplearning(x=1:9,
 model1
 
 #model2 with three layers of 100 nodes
-model2 <- h2o.deeplearning(x=1:9,
-                           y=10,
+model2 <- h2o.deeplearning(x=2:18,
+                           y=19,
                            training_frame = dat_h2o,
                            activation = "RectifierWithDropout",
                            input_dropout_ratio = 0.2,
@@ -212,8 +212,8 @@ model2 <- h2o.deeplearning(x=1:9,
 model2
 
 #model3 with three layers of 50 nodes and a Tanh activation
-model3 <- h2o.deeplearning(x=1:9,
-                           y=10,
+model3 <- h2o.deeplearning(x=2:18,
+                           y=19,
                            training_frame = dat_h2o,
                            activation = "TanhWithDropout",
                            input_dropout_ratio = 0.2,
@@ -224,8 +224,8 @@ model3 <- h2o.deeplearning(x=1:9,
 model3
 
 #model4 with three layers of 50 nodes and a Tanh activation, no dropout
-model4 <- h2o.deeplearning(x=1:9,
-                           y=10,
+model4 <- h2o.deeplearning(x=2:18,
+                           y=19,
                            training_frame = dat_h2o,
                            activation = "Tanh",
                            input_dropout_ratio = 0.2,

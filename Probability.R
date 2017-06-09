@@ -224,6 +224,7 @@ model3 <- h2o.deeplearning(x=2:18,
 model3
 
 #model4 with three layers of 50 nodes and a Tanh activation, no dropout
+set.seed(14)
 model4 <- h2o.deeplearning(x=2:18,
                            y=19,
                            training_frame = dat_h2o,
@@ -233,3 +234,15 @@ model4 <- h2o.deeplearning(x=2:18,
                            epochs = 50,
                            nfolds = 10)
 model4
+
+#model5 with three layers of 100 nodes and a Tanh activation, no dropout
+set.seed(14)
+model5 <- h2o.deeplearning(x=2:18,
+                           y=19,
+                           training_frame = dat_h2o,
+                           activation = "Tanh",
+                           input_dropout_ratio = 0.2,
+                           hidden = c(100,100,100),
+                           epochs = 50,
+                           nfolds = 10)
+model5

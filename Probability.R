@@ -60,36 +60,6 @@ X15FA$EFC <- NULL
 
 summary(X15FA)
 
-#set variable types for PCA
-NUM15FA <- X15FA
-NUM15FA$Gender <- as.numeric(NUM15FA$Gender)
-NUM15FA$Ethnic <- as.numeric(NUM15FA$Ethnic)
-NUM15FA$Religion <- as.numeric(NUM15FA$Religion)
-NUM15FA$Career_Goals <- as.numeric(NUM15FA$Career_Goals)
-NUM15FA$FA_Intent <- as.numeric(NUM15FA$FA_Intent)
-NUM15FA$First_Gen <- as.numeric(NUM15FA$First_Gen)
-NUM15FA$HS_Type <- as.numeric(NUM15FA$HS_Type)
-NUM15FA$Visit <- as.numeric(NUM15FA$Visit)
-NUM15FA$Rating <- as.numeric(NUM15FA$Rating)
-NUM15FA$Housing_Desired <- as.numeric(NUM15FA$Housing_Desired)
-NUM15FA$Legacy <- as.numeric(NUM15FA$Legacy)
-NUM15FA$Enroll <- as.numeric(NUM15FA$Enroll)
-NUM15FA$Regis_Position <- as.numeric(NUM15FA$Regis_Position)
-NUM15FA$State <- as.numeric(NUM15FA$State)
-
-#Principle Component Analysis
-sub <-subset(NUM15FA,select = -c(ID, Enroll))
-pca <- prcomp(sub, scale. = T)
-pca$rotation
-dim(pca$x)
-biplot(pca, scale = 0)
-std_dev <- pca$sdev
-pca_var <- std_dev^2
-prop_varex <- pca_var/sum(pca_var)
-plot(prop_varex, xlab = "Principal Component", ylab = "Proportion of Variance Explained", type = "b")
-plot(cumsum(prop_varex), xlab = "Principal Component", ylab = "Cumulative Proportion of Variance Explained", type = "b")
-
-
 
 #split the data into training & testing
 ind <- sample(2, nrow(X15FA), replace = TRUE, prob = c(0.8,0.2))
@@ -139,10 +109,10 @@ X15FA.boostcv$error
 
 #build a random forest.
 set.seed(6)
-rf <- randomForest(as.factor(Enroll) ~ ., data=train15FA, importance=TRUE, ntree=2000)
+rf <- randomForest(as.factor(Enroll) ~ ., data=trainNum, importance=TRUE, ntree=2000)
 varImpPlot(rf)
-PredRF <- predict(rf, test15FA, type = "class")
-confusionMatrix(table(test15FA$Enroll, PredRF))
+PredRF <- predict(rf, testNum, type = "class")
+confusionMatrix(table(testNum$Enroll, PredRF))
 min(rf$err.rate)
 
 #conditional inference tree
@@ -188,6 +158,7 @@ h2o.describe(dat_h2o)
 
 
 #model1 with a deep learning network (three layers of 50 nodes)
+set.seed(54321)
 model1 <- h2o.deeplearning(x=2:18,
                            y=19,
                            training_frame = dat_h2o,
@@ -246,3 +217,156 @@ model5 <- h2o.deeplearning(x=2:18,
                            epochs = 50,
                            nfolds = 10)
 model5
+
+
+
+#Neurl network with H2O package
+#start h20 instance
+localH2O <- h2o.init(ip = "localhost", port = 54321, startH2O = TRUE)
+df <- h2o.importFile(paste0(path = normalizePath("D:/Practicum/Project Data/15FA/"),"/15FA Final Data.xlsx", sheet = "Final 2"))
+dim(df)
+df
+splits <- h2o.splitFrame(df, c(0.6,0.2), seed=1234)
+train  <- h2o.assign(splits[[1]], "train.hex") # 60%
+valid  <- h2o.assign(splits[[2]], "valid.hex") # 20%
+test   <- h2o.assign(splits[[3]], "test.hex")  # 20%
+
+
+#model6 with a deep learning network (three layers of 50 nodes)
+model6 <- h2o.deeplearning(x=2:18,
+                           y=19,
+                           set.seed(789),
+                           training_frame = train,
+                           validation_frame = test,
+                           activation = "RectifierWithDropout",
+                           input_dropout_ratio = 0.2,
+                           hidden_dropout_ratios = c(0.5,0.5,0.5),
+                           hidden = c(50,50,50),
+                           epochs = 50,
+                           nfolds = 10,
+                           variable_importances = T)
+model6
+head(as.data.frame(h2o.varimp(model6)))
+
+h2o.performance(model6, train = T)
+h2o.performance(model6, valid = T)
+h2o.performance(model6, newdata = train)
+h2o.performance(model6, newdata = valid)
+h2o.performance(model6, newdata = test)
+
+DLpred <- h2o.predict(model6, test)
+DLpred
+test$Accuracy <- DLpred$predict == test$Enroll
+1-mean(test$Accuracy)
+
+
+#set variable types for PCA
+NUM15FA <- X15FA
+NUM15FA$Gender <- as.numeric(NUM15FA$Gender)
+NUM15FA$Ethnic <- as.numeric(NUM15FA$Ethnic)
+NUM15FA$Religion <- as.numeric(NUM15FA$Religion)
+NUM15FA$Career_Goals <- as.numeric(NUM15FA$Career_Goals)
+NUM15FA$FA_Intent <- as.numeric(NUM15FA$FA_Intent)
+NUM15FA$First_Gen <- as.numeric(NUM15FA$First_Gen)
+NUM15FA$HS_Type <- as.numeric(NUM15FA$HS_Type)
+NUM15FA$Visit <- as.numeric(NUM15FA$Visit)
+NUM15FA$Rating <- as.numeric(NUM15FA$Rating)
+NUM15FA$Housing_Desired <- as.numeric(NUM15FA$Housing_Desired)
+NUM15FA$Legacy <- as.numeric(NUM15FA$Legacy)
+NUM15FA$Enroll <- as.numeric(NUM15FA$Enroll)
+NUM15FA$Regis_Position <- as.numeric(NUM15FA$Regis_Position)
+NUM15FA$State <- as.numeric(NUM15FA$State)
+
+#split the data into training & testing based on numerical data frame
+ind2 <- sample(2, nrow(NUM15FA), replace = TRUE, prob = c(0.8,0.2))
+trainNum <- PrimComps[ind2 == 1,]
+testNum <- PrimComps[ind2 == 2,]
+
+#Principle Component Analysis
+sub <-subset(NUM15FA,select = -c(ID, Enroll))
+pca <- prcomp(sub, scale. = T)
+pca$rotation
+dim(pca$x)
+biplot(pca, scale = 0)
+std_dev <- pca$sdev
+pca_var <- std_dev^2
+prop_varex <- pca_var/sum(pca_var)
+plot(prop_varex, main = "Scree Plot", xlab = "Principal Component", ylab = "Proportion of Variance Explained", type = "b")
+plot(cumsum(prop_varex), main = "Cumulative Sum of Variance", xlab = "Principal Component", ylab = "Cumulative Proportion of Variance Explained", type = "b")
+
+PrimComps <- subset(X15FA, select = c(Rating, State, Visit, Time_between_App_and_Term, Career_Goals, Regis_Position, Enroll))
+PrimComps$Rating <- as.factor(PrimComps$Rating)
+PrimComps$State <- as.factor(PrimComps$State)
+PrimComps$Visit <- as.factor(PrimComps$Visit)
+
+#split the data into training & testing based on PCA set
+ind3 <- sample(2, nrow(PrimComps), replace = TRUE, prob = c(0.8,0.2))
+trainPrim <- PrimComps[ind3 == 1,]
+testPrim <- PrimComps[ind3 == 2,]
+
+#build a linear regression model
+#train15FA$Enroll <- as.factor(train15FA$Enroll)
+#reg15FA <- lm(formula= Enroll ~ ., data = train15FA)
+#predLR <- predict.lm(reg15FA, newdata = test15FA, interval = "predict")
+#confusionMatrix(predLR, reference = X15FA$Enroll, positive = "1")
+
+#bagging & boosting.
+#bagging method
+set.seed(1)
+trainPrim$Enroll <- as.factor(trainPrim$Enroll)
+testPrim$Enroll <- as.factor(testPrim$Enroll)
+Prim.bagg <- bagging(Enroll ~ ., data = trainPrim, mfinal = 10)
+Prim.bagg$importance
+
+#test
+set.seed(2)
+Prim.predbagging <- predict.bagging(Prim.bagg, newdata = testPrim)
+Prim.predbagging$confusion
+Prim.predbagging$error
+
+#10-fold cross validation
+set.seed(3)
+Prim.baggingcv <- bagging.cv(Enroll ~., v=10, data = PrimComps, mfinal = 100)
+Prim.baggingcv$confusion
+Prim.baggingcv$error
+
+#boosting method
+set.seed(4)
+Prim.boost <- boosting(Enroll ~., data = trainPrim, mfinal=10, coeflearn = "Breiman", control = rpart.control(maxdepth = 3))
+Prim.predboost <- predict.boosting(Prim.boost, newdata = testPrim)
+Prim.predboost$confusion
+Prim.predboost$error
+
+#boosting with cross validation
+set.seed(5)
+Prim.boostcv <- boosting.cv(Enroll~., v=10, data = PrimComps, mfinal=100)
+Prim.boostcv$confusion
+Prim.boostcv$error
+
+
+#build a random forest.
+set.seed(6)
+Primrf <- randomForest(as.factor(Enroll) ~ ., data=trainPrim, importance=TRUE, ntree=2000)
+varImpPlot(Primrf)
+PrimPredRF <- predict(Primrf, testPrim, type = "class")
+confusionMatrix(table(testPrim$Enroll, PrimPredRF))
+min(Primrf$err.rate)
+
+#conditional inference tree
+set.seed(7)
+PrimCItree <- ctree(Enroll ~., data = trainPrim)
+PrimCItree
+PrimpredCI <- predict(PrimCItree, testPrim)
+confusionMatrix(table(testPrim$Enroll, PrimpredCI), positive = "Yes")
+
+
+#SVM
+set.seed(8)
+SVMPrim <- svm(Enroll ~ ., data = trainPrim, kernel = "radial", cost = 1, gamma = 1/ncol(trainPrim))
+summary(SVMPrim)
+SVMpredPrim <- predict(SVMPrim, testPrim[, !names(testPrim) %in% c("Enroll")])
+Prim.svm.table <- table(SVMpredPrim, testPrim$Enroll)
+Prim.svm.table
+classAgreement(Prim.svm.table)
+confusionMatrix(Prim.svm.table, positive = "Yes")
+

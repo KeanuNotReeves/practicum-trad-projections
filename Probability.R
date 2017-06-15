@@ -151,7 +151,7 @@ plot(SVM15FA, train15FA, Enroll ~ ., slice = list(Enroll = 2))
 #Neurl network with H2O package
 #start h20 instance
 localH2O <- h2o.init(ip = "localhost", port = 54321, startH2O = TRUE)
-pathtodata <- paste0(normalizePath("D:/Practicum/Project Data/15FA/"),"/15FA Final Data.xlsx", sheet = "Final 2")
+pathtodata <- paste0(normalizePath("E:/Practicum/Project Data/15FA/"),"/15FA Final Data.xlsx", sheet = "Final 2")
 write.table(x=X15FA, file = pathtodata, row.names = F, col.names = T)
 dat_h2o <- h2o.importFile(path = pathtodata, destination_frame = "X15FA")
 h2o.describe(dat_h2o)
@@ -169,6 +169,7 @@ model1 <- h2o.deeplearning(x=2:18,
                            epochs = 50,
                            nfolds = 10)
 model1
+plot(model1, main = "Model 1")
 
 #model2 with three layers of 100 nodes
 model2 <- h2o.deeplearning(x=2:18,
@@ -181,6 +182,7 @@ model2 <- h2o.deeplearning(x=2:18,
                            epochs = 50,
                            nfolds = 10)
 model2
+plot(model2, main = "Model 2")
 
 #model3 with three layers of 50 nodes and a Tanh activation
 model3 <- h2o.deeplearning(x=2:18,
@@ -193,6 +195,7 @@ model3 <- h2o.deeplearning(x=2:18,
                            epochs = 50,
                            nfolds = 10)
 model3
+plot(model3, main = "Model 3")
 
 #model4 with three layers of 50 nodes and a Tanh activation, no dropout
 set.seed(14)
@@ -205,6 +208,7 @@ model4 <- h2o.deeplearning(x=2:18,
                            epochs = 50,
                            nfolds = 10)
 model4
+plot(model4, main = "Model 4")
 
 #model5 with three layers of 100 nodes and a Tanh activation, no dropout
 set.seed(14)
@@ -217,13 +221,13 @@ model5 <- h2o.deeplearning(x=2:18,
                            epochs = 50,
                            nfolds = 10)
 model5
+plot(model5, main = "Model 5")
 
 
-
-#Neurl network with H2O package
+#Neural network with H2O package
 #start h20 instance
-localH2O <- h2o.init(ip = "localhost", port = 54321, startH2O = TRUE)
-df <- h2o.importFile(paste0(path = normalizePath("D:/Practicum/Project Data/15FA/"),"/15FA Final Data.xlsx", sheet = "Final 2"))
+#localH2O <- h2o.init(ip = "localhost", port = 54321, startH2O = TRUE)
+df <- h2o.importFile(paste0(path = normalizePath("E:/Practicum/Project Data/15FA/"),"/15FA Final Data.xlsx", sheet = "Final 2"))
 dim(df)
 df
 splits <- h2o.splitFrame(df, c(0.6,0.2), seed=1234)
@@ -242,7 +246,7 @@ model6 <- h2o.deeplearning(x=2:18,
                            input_dropout_ratio = 0.2,
                            hidden_dropout_ratios = c(0.5,0.5,0.5),
                            hidden = c(50,50,50),
-                           epochs = 50,
+                           epochs = 70,
                            nfolds = 10,
                            variable_importances = T)
 model6
@@ -258,8 +262,12 @@ DLpred <- h2o.predict(model6, test)
 DLpred
 test$Accuracy <- DLpred$predict == test$Enroll
 1-mean(test$Accuracy)
+plot(model6, main = "Model 6")
 
+h2o.logloss(model6, train = train, valid = valid, xval = FALSE)
 
+#gdata <- data.frame(cbind(test, pred=as.data.frame(DLpred)$Enroll))
+#ggplot(gdata, aes(x=))
 #set variable types for PCA
 NUM15FA <- X15FA
 NUM15FA$Gender <- as.numeric(NUM15FA$Gender)

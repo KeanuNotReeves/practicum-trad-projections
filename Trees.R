@@ -1,82 +1,94 @@
 library(readxl)
 library(randomForest)
 library(caret)
-library(adabag)
-library(e1071)
-library(party)
-library(neuralnet)
-library(h2o)
-library(dummies)
-library(dummy)
-library(party)
 
 #bring in the 15FA data
 X15FA <- as.data.frame(read_excel("D:/Practicum/Project Data/15FA/15FA Final.xlsx",sheet = "15FA"))
+X16FA <- as.data.frame(read_excel("D:/Practicum/Project Data/16FA/16FA Final.xlsx",sheet = "Final"))
+
+Admits <- rbind(X15FA, X16FA)
 
 #set variable types
-X15FA$Gender <- as.factor(X15FA$Gender)
-X15FA$Ethnic <- as.factor(X15FA$Ethnic)
-X15FA$Religion <- as.factor(X15FA$Religion)
-X15FA$Career_Goals <- as.factor(X15FA$Career_Goals)
-X15FA$FA_Intent <- as.factor(X15FA$FA_Intent)
-X15FA$First_Gen <- as.factor(X15FA$First_Gen)
-X15FA$HS_Type <- as.factor(X15FA$HS_Type)
-X15FA$Visit <- as.factor(X15FA$Visit)
-X15FA$Rating <- as.factor(X15FA$Rating)
-X15FA$Housing_Desired <- as.factor(X15FA$Housing_Desired)
-X15FA$Legacy <- as.factor(X15FA$Legacy)
-X15FA$Enroll <- as.factor(X15FA$Enroll)
-X15FA$Regis_Position <- as.factor(X15FA$Regis_Position)
+Admits$Gender <- as.factor(Admits$Gender)
+Admits$Ethnic <- as.factor(Admits$Ethnic)
+Admits$Religion <- as.factor(Admits$Religion)
+Admits$FA_Intent <- as.factor(Admits$FA_Intent)
+Admits$First_Gen <- as.factor(Admits$First_Gen)
+Admits$HS_Type <- as.factor(Admits$HS_Type)
+Admits$Visit <- as.factor(Admits$Visit)
+Admits$Rating <- as.factor(Admits$Rating)
+Admits$Legacy <- as.factor(Admits$Legacy)
+Admits$Enroll <- as.factor(Admits$Enroll)
+Admits$Regis_Position <- as.factor(Admits$Regis_Position)
 
 
 #perform EDA on the dataset
-str(X15FA)
-summary(X15FA)
-hist(X15FA$Composite_Score, main = "Composite Score Distribution", xlab = "Composite Score", ylab = "Number of Students")
-hist(X15FA$Distance, main = "Distance From Campus Distribution", xlab = "Distance (miles)", ylab = "Number of Students")
+str(Admits)
+summary(Admits)
+hist(Admits$Composite_Score, main = "Composite Score Distribution", xlab = "Composite Score", ylab = "Number of Students")
+hist(Admits$Distance, main = "Distance From Campus Distribution", xlab = "Distance (miles)", ylab = "Number of Students")
 
 #Clean the data, removing or replacing NA's
-which((is.na(X15FA$GPA)))
-X15FA$GPA[c(428,1666,2067,2384,2508,3135)] <- median(X15FA$GPA, na.rm = TRUE)
-which((is.na(X15FA$GPA)))
+which((is.na(Admits$GPA)))
+Admits$GPA[is.na(Admits$GPA)] <- with(Admits, median(Admits$GPA, na.rm = TRUE))
+which((is.na(Admits$GPA)))
 
-which(is.na(X15FA$Distance))
-X15FA$Distance[c(6,30,200,224,252,293,416,428,480,598,742,749,918,949,1015,1076,1231,1321,1466,1666,1693,1730,1936,2002,2014,2018,2067,2105,2112,2182,2249,2382,2415,2508,2618,2850,2851,2927,3184,3186,3222,3421)] <- max(X15FA$Distance, na.rm = TRUE)
-which(is.na(X15FA$Distance))
+which(is.na(Admits$Distance))
+Admits$Distance[is.na(Admits$Distance)] <- with(Admits, max(Admits$Distance, na.rm = TRUE))
+which(is.na(Admits$Distance))
 
-which(is.na(X15FA$Career_Goals))
-X15FA$Career_Goals[c(556,851,1092,1310,1874,2013,2180,2980,3331,3335)] <- "UND"
-which(is.na(X15FA$Career_Goals))
+which(is.na(Admits$State))
+Admits$State[is.na(Admits$State)] <- "International"
+which(is.na(Admits$State))
+Admits$State <- as.factor(Admits$State)
 
-which(is.na(X15FA$State))
-X15FA$State[c(6,224,252,1076,1231,1466,1620,1666,1693,1730,1802,1936,2002,2014,2018,2067,2105,2249,2916)] <- "International"
-which(is.na(X15FA$State))
-X15FA$State <- as.factor(X15FA$State)
+Admits$State <- NULL #random forests can't handle factors with more than 53 levels
 
-#remove the columns with majority missing values
-X15FA$`HS_Rank_%` <- NULL
-X15FA$Student_AGI <- NULL
-X15FA$EFC <- NULL
 
-summary(X15FA)
+summary(Admits)
 
 
 #split the data into training & testing
-ind <- sample(2, nrow(X15FA), replace = TRUE, prob = c(0.8,0.2))
-train15FA <- X15FA[ind == 1,]
-test15FA <- X15FA[ind==2,]
+ind <- sample(2, nrow(Admits), replace = TRUE, prob = c(0.8,0.2))
+trainAdmits <- Admits[ind == 1,]
+testAdmits <- Admits[ind==2,]
 
 #build a random forest.
 set.seed(6)
-rf <- randomForest(as.factor(Enroll) ~ ., data=trainNum, importance=TRUE, ntree=2000)
+rf <- randomForest(Enroll ~ ., data=trainAdmits, importance=TRUE, ntree=2000)
 varImpPlot(rf)
-PredRF <- predict(rf, testNum, type = "class")
-confusionMatrix(table(testNum$Enroll, PredRF))
+rf$confusion
 min(rf$err.rate)
+PredRF <- predict(rf, testAdmits, type = "class")
+PredRF
+confusionMatrix(table(test15FA$Enroll, PredRF), positive = "Yes")
 
 #conditional inference tree
 set.seed(7)
-CItree <- ctree(Enroll ~., data = train15FA)
+CItree <- ctree(Enroll ~., data = trainAdmits)
 CItree
-predCI <- predict(CItree, test15FA)
+predCI <- predict(CItree, testAdmits)
 confusionMatrix(table(test15FA$Enroll, predCI), positive = "Yes")
+
+#split the data into training & testing with Principle Components only
+Prin <- sample(2, nrow(PrimComps), replace = TRUE, prob = c(0.8,0.2))
+trainPrin <- PrimComps[Prin == 1,]
+testPrin <- PrimComps[Prin==2,]
+trainPrin$State <- NULL
+testPrin$State <- NULL
+
+#build a random forest on Principle components
+set.seed(8)
+rf1 <- randomForest(Enroll ~ ., data=trainPrin, importance=TRUE, ntree=2000)
+varImpPlot(rf1)
+rf1$confusion
+min(rf1$err.rate)
+PredRF1 <- predict(rf1, testPrin, type = "class")
+confusionMatrix(table(testPrin$Enroll, PredRF1), positive = "Yes")
+
+#conditional inference tree on principle components.
+set.seed(9)
+CItree1 <- ctree(Enroll ~., data = trainPrin)
+CItree1
+predCI1 <- predict(CItree1, testPrin)
+confusionMatrix(table(testPrin$Enroll, predCI1), positive = "Yes")

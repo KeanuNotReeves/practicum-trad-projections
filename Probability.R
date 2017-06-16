@@ -287,8 +287,8 @@ NUM15FA$State <- as.numeric(NUM15FA$State)
 
 #split the data into training & testing based on numerical data frame
 ind2 <- sample(2, nrow(NUM15FA), replace = TRUE, prob = c(0.8,0.2))
-trainNum <- PrimComps[ind2 == 1,]
-testNum <- PrimComps[ind2 == 2,]
+trainNum <- NUM15FA[ind2 == 1,]
+testNum <- NUM15FA[ind2 == 2,]
 
 #Principle Component Analysis
 sub <-subset(NUM15FA,select = -c(ID, Enroll))

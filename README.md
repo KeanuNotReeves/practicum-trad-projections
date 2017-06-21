@@ -9,7 +9,7 @@ In order to complete this I will pull all of the admitted students for the Fall 
 I acquired data from Regis University's data warehouse in accordance with the parameters of my job responsibilities and limitations. All of the personally identifying information of the student records was altered or deleted to protect their identity in accordance with FERPA guidelines.    
 
 
-#### **The Data**    
+### **The Data**    
 
 The data has 7,000 samples and 16 features including ID, Gender, Ethnic, Religion, First Generation, High School Type, Distance, State, Composite Score, High School GPA, Rating, Visit, Legacy, Regis Position, Time between Application Submitted and Term Start, and Enroll. The data has 11 categorical variables and 5 numeric. The target variable is Enroll, which is a factor with two levels ("Yes" and "No").    
 

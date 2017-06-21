@@ -1,8 +1,10 @@
+library(h2o)
 library(readxl)
 library(randomForest)
 library(caret)
+library(xlsx)
 
-#bring in the 15FA data
+#bring in the 15FA & 16FA data
 X15FA <- as.data.frame(read_excel("D:/Practicum/Project Data/15FA/15FA Final.xlsx",sheet = "15FA"))
 X16FA <- as.data.frame(read_excel("D:/Practicum/Project Data/16FA/16FA Final.xlsx",sheet = "Final"))
 
@@ -42,11 +44,6 @@ Admits$State[is.na(Admits$State)] <- "International"
 which(is.na(Admits$State))
 Admits$State <- as.factor(Admits$State)
 
-PrimComps$State <- as.character(PrimComps$State)
-PrimComps$State[PrimComps$State == "CO"] <- "In"
-PrimComps$State[PrimComps$State != "CO"] <- "Out"
-PrimComps$State <- as.factor(PrimComps$State)
-
 summary(Admits)
 
 #set variable types for PCA
@@ -64,11 +61,6 @@ numAdmits$Enroll <- as.numeric(numAdmits$Enroll)
 numAdmits$Regis_Position <- as.numeric(numAdmits$Regis_Position)
 numAdmits$State <- as.numeric(numAdmits$State)
 
-#split the data into training & testing based on numerical data frame
-ind2 <- sample(2, nrow(numAdmits), replace = TRUE, prob = c(0.8,0.2))
-trainNum <- numAdmits[ind2 == 1,]
-testNum <- numAdmits[ind2 == 2,]
-
 #Principle Component Analysis
 sub <-subset(numAdmits,select = -c(ID, Enroll))
 pca <- prcomp(sub, scale. = T)
@@ -81,10 +73,77 @@ prop_varex <- pca_var/sum(pca_var)
 plot(prop_varex, main = "Scree Plot", xlab = "Principal Component", ylab = "Proportion of Variance Explained", type = "b")
 plot(cumsum(prop_varex), main = "Cumulative Sum of Variance", xlab = "Principal Component", ylab = "Cumulative Proportion of Variance Explained", type = "b")
 
-PrimComps <- subset(Admits, select = c(FA_Intent, State, Visit, Time_between_App_and_Term, Regis_Position, Enroll))
+PrimComps <- subset(Admits, select = c(Rating, FA_Intent, State, Visit, Time_between_App_and_Term, Regis_Position, Enroll))
+PrimComps$Rating <- as.factor(PrimComps$Rating)
 PrimComps$State <- as.factor(PrimComps$State)
 PrimComps$Visit <- as.factor(PrimComps$Visit)
+PrimComps$FA_Intent <- as.factor(PrimComps$FA_Intent)
+
+
+#SMOTE method to balance the Enroll class
+PrimComps <- SMOTE(Enroll ~ ., PrimComps, perc.over = 500)
+summary(PrimComps)
+
+h2oPCA <- as.h2o(PrimComps, destination_frame = "PrimComps")
+
+#Neural network with H2O package
+#start h20 instance
+localH2O <- h2o.init(ip = "localhost", port = 54321, startH2O = TRUE)
+dim(h2oPCA)
+h2oPCA
+splits <- h2o.splitFrame(h2oPCA, c(0.6,0.2), seed=1234)
+train  <- h2o.assign(splits[[1]], "train.hex") # 60%
+valid  <- h2o.assign(splits[[2]], "valid.hex") # 20%
+test   <- h2o.assign(splits[[3]], "test.hex")  # 20%
+
+
+#model6 with a deep learning network (three layers of 50 nodes)
+dlmodel <- h2o.deeplearning(x=1:6,
+                           y=7,
+                           set.seed(789),
+                           training_frame = train,
+                           validation_frame = test,
+                           activation = "RectifierWithDropout",
+                           input_dropout_ratio = 0.1,
+                           hidden_dropout_ratios = c(0.5,0.5,0.5),
+                           hidden = c(200,200,200),
+                           epochs = 100,
+                           nfolds = 10,
+                           variable_importances = TRUE,
+                           overwrite_with_best_model = TRUE,
+                           balance_classes = TRUE)
+dlmodel
+head(as.data.frame(h2o.varimp(dlmodel)))
+
+#h2o.performance(dlmodel, train = T)
+h2o.performance(dlmodel, valid = T)
+#h2o.performance(dlmodel, newdata = train)
+h2o.performance(dlmodel, newdata = valid)
+h2o.performance(dlmodel, newdata = test)
+
+DLpred <- h2o.predict(dlmodel, test)
+DLpred
+test$Accuracy <- DLpred$predict == test$Enroll
+1-mean(test$Accuracy)
+plot(dlmodel)
+
+#################################################################################################
+#break states into "in-state" and "out-of-state" to simplify the model
 PrimComps$State <- as.character(PrimComps$State)
 PrimComps$State[PrimComps$State == "CO"] <- "In"
 PrimComps$State[PrimComps$State != "In"] <- "Out"
 PrimComps$State <- as.factor(PrimComps$State)
+
+#split the data into training & testing with Principle Components only
+Prin <- sample(2, nrow(PrimComps), replace = TRUE, prob = c(0.7,0.3))
+trainPrin <- PrimComps[Prin == 1,]
+testPrin <- PrimComps[Prin==2,]
+
+#build a linear regression model
+trainPrin$Enroll <- as.factor(trainPrin$Enroll)
+regPrin <- glm(Enroll ~ ., family = "binomial", data = trainPrin)
+summary(regPrin)
+predLR <- predict(regPrin, newdata = testPrin, type = "response")
+testPrin$Probability <- predLR
+class <- predLR >0.35
+table(testPrin$Enroll,class)

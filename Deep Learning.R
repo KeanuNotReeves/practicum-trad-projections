@@ -4,7 +4,7 @@ library(h2o)
 #start h20 instance
 localH2O <- h2o.init(ip = "localhost", port = 54321, startH2O = TRUE)
 pathtodata <- paste0(normalizePath("D:/Practicum/Project Data/"),"/All Admits.xlsx", sheet = "Sheet 1")
-write.table(x=X15FA, file = pathtodata, row.names = F, col.names = T)
+write.table(x=Admits, file = pathtodata, row.names = F, col.names = T)
 dat_h2o <- h2o.importFile(path = pathtodata, destination_frame = "Admits")
 h2o.describe(dat_h2o)
 dim(dat_h2o)

@@ -1,6 +1,7 @@
 library(readxl)
 library(randomForest)
 library(caret)
+library(party)
 
 #bring in the 15FA data
 X15FA <- as.data.frame(read_excel("D:/Practicum/Project Data/15FA/15FA Final.xlsx",sheet = "15FA"))
@@ -47,11 +48,15 @@ Admits$State <- NULL #random forests can't handle factors with more than 53 leve
 
 summary(Admits)
 
+PrimComps$State <- as.character(PrimComps$State)
+PrimComps$State[PrimComps$State == "CO"] <- "In"
+PrimComps$State[PrimComps$State != "In"] <- "Out"
+PrimComps$State <- as.factor(PrimComps$State)
 
 #split the data into training & testing
-ind <- sample(2, nrow(Admits), replace = TRUE, prob = c(0.8,0.2))
-trainAdmits <- Admits[ind == 1,]
-testAdmits <- Admits[ind==2,]
+ind2 <- sample(2, nrow(PrimComps), replace = TRUE, prob = c(0.8,0.2))
+trainAdmits <- PrimComps[ind2 == 1,]
+testAdmits <- PrimComps[ind2 == 2,]
 
 #build a random forest.
 set.seed(6)
@@ -60,8 +65,8 @@ varImpPlot(rf)
 rf$confusion
 min(rf$err.rate)
 PredRF <- predict(rf, testAdmits, type = "class")
-PredRF
-confusionMatrix(table(test15FA$Enroll, PredRF), positive = "Yes")
+#PredRF
+confusionMatrix(table(testAdmits$Enroll, PredRF), positive = "Yes")
 
 #conditional inference tree
 set.seed(7)
@@ -71,11 +76,9 @@ predCI <- predict(CItree, testAdmits)
 confusionMatrix(table(test15FA$Enroll, predCI), positive = "Yes")
 
 #split the data into training & testing with Principle Components only
-Prin <- sample(2, nrow(PrimComps), replace = TRUE, prob = c(0.8,0.2))
+Prin <- sample(2, nrow(PrimComps), replace = TRUE, prob = c(0.7,0.3))
 trainPrin <- PrimComps[Prin == 1,]
 testPrin <- PrimComps[Prin==2,]
-trainPrin$State <- NULL
-testPrin$State <- NULL
 
 #build a random forest on Principle components
 set.seed(8)
@@ -88,7 +91,9 @@ confusionMatrix(table(testPrin$Enroll, PredRF1), positive = "Yes")
 
 #conditional inference tree on principle components.
 set.seed(9)
-CItree1 <- ctree(Enroll ~., data = trainPrin)
+CItree1 <- ctree(Enroll=="Yes" ~., data = trainPrin)
 CItree1
+plot(CItree1, main = "Conditional Inference of Enrolled")
 predCI1 <- predict(CItree1, testPrin)
+table(predCI1, testPrin$Enroll)
 confusionMatrix(table(testPrin$Enroll, predCI1), positive = "Yes")

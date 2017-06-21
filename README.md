@@ -1,6 +1,6 @@
 # **Traditional Student Enrollment Projections**    
 
-For this project I will use historical application information for Regis University to build a machine learning algorithm to assign a probability to each incoming student of future enrollment.
+For this project I will use historical application information for Regis University to build a machine learning algorithm to assign a probability to each incoming student of future enrollment.The project was completed using Excel and R.
 
 In order to complete this I will pull all of the admitted students for the Fall term for the past two academic years (approximately 7,000 stdents). I will pull in each of their academic credentials, as well as biographic and demographic to try and build the algorithm upon.
 
@@ -13,7 +13,9 @@ I acquired data from Regis University's data warehouse in accordance with the pa
 
 The data has 7,000 samples and 16 features including ID, Gender, Ethnic, Religion, First Generation, High School Type, Distance, State, Composite Score, High School GPA, Rating, Visit, Legacy, Regis Position, Time between Application Submitted and Term Start, and Enroll. The data has 11 categorical variables and 5 numeric. The target variable is Enroll, which is a factor with two levels ("Yes" and "No").    
 
-### **EDA (Exploratory Data Analysis)**    
+### **EDA (Exploratory Data Analysis)**  
+
+EDA was performed by looking at the structure of the model and summary statistics. THis showed a number of missing values that needed to be cleaned. 
 
 ### **Analysis methods**
 

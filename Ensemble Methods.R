@@ -47,6 +47,8 @@ Admits$State <- as.factor(Admits$State)
 
 summary(Admits)
 
+Admits <- SMOTE(Enroll ~ ., Admits, perc.over = 500)
+
 
 #split the data into training & testing
 ind3 <- sample(2, nrow(Admits), replace = TRUE, prob = c(0.8,0.2))
@@ -86,4 +88,5 @@ set.seed(5)
 Admits.boostcv <- boosting.cv(Enroll~., v=10, data = Admits, mfinal=100)
 Admits.boostcv$confusion
 Admits.boostcv$error
-
+Admits$Prediction <- Admits.boostcv$class
+View(Admits)

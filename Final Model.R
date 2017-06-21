@@ -147,3 +147,14 @@ predLR <- predict(regPrin, newdata = testPrin, type = "response")
 testPrin$Probability <- predLR
 class <- predLR >0.35
 table(testPrin$Enroll,class)
+
+#################################################################################################
+
+#boosting with cross validation
+Admits2 <- SMOTE(Enroll ~ ., Admits, perc.over = 500)
+set.seed(5)
+Admits.boostcv <- boosting.cv(Enroll~., v=10, data = Admits2, mfinal=100)
+Admits.boostcv$confusion
+Admits.boostcv$error
+Admits2$Probability <- Admits.boostcv$class
+write.xlsx(Admits2, "D:/Practicum/Project Data/Final.xlsx")

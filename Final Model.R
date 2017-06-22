@@ -3,6 +3,10 @@ library(readxl)
 library(randomForest)
 library(caret)
 library(xlsx)
+library(DMwR)
+library(adabag)
+library(e1071)
+library(party)
 
 #bring in the 15FA & 16FA data
 X15FA <- as.data.frame(read_excel("D:/Practicum/Project Data/15FA/15FA Final.xlsx",sheet = "15FA"))
@@ -80,14 +84,68 @@ PrimComps$Visit <- as.factor(PrimComps$Visit)
 PrimComps$FA_Intent <- as.factor(PrimComps$FA_Intent)
 
 
-#SMOTE method to balance the Enroll class
-PrimComps <- SMOTE(Enroll ~ ., PrimComps, perc.over = 500)
-summary(PrimComps)
+#################################################################################################
 
-h2oPCA <- as.h2o(PrimComps, destination_frame = "PrimComps")
+Admits2 <- SMOTE(Enroll ~ ., Admits, perc.over = 500)
+PrimComps2 <- SMOTE(Enroll ~ ., PrimComps, perc.over = 500)
+
+#boosting with cross validation on all Admits
+set.seed(2)
+Admits.boostcv <- boosting.cv(Enroll~., v=10, data = Admits, mfinal=100)
+Admits.boostcv$confusion
+Admits.boostcv$error
+Admits$Probability <- Admits.boostcv$class
+
+#boosting with cross validation on Admits with balanced classes
+set.seed(3)
+Admits2.boostcv <- boosting.cv(Enroll~., v=10, data = Admits2, mfinal=100)
+Admits2.boostcv$confusion
+Admits2.boostcv$error
+Admits2$Probability <- Admits2.boostcv$class
+#write.xlsx(Admits2, "D:/Practicum/Project Data/Final.xlsx")
+
+#boosting with cross validation on the PCA dataset
+set.seed(4)
+PCA.boostcv <- boosting.cv(Enroll~., v=10, data = PrimComps, mfinal=100)
+PCA.boostcv$confusion
+PCA.boostcv$error
+PrimComps$Probability <- PCA.boostcv$class
+
+#boosting with cross validation on the PCA dataset with balanced classes
+set.seed(5)
+PCA.SMOTE.boostcv <- boosting.cv(Enroll~., v=10, data = PrimComps2, mfinal=100)
+PCA.SMOTE.boostcv$confusion
+PCA.SMOTE.boostcv$error
+PrimComps2$Probability <- PCA.SMOTE.boostcv$class
+
+#################################################################################################
+#break states into "in-state" and "out-of-state" to simplify the model
+PrimComps2$State <- as.character(PrimComps2$State)
+PrimComps2$State[PrimComps2$State == "CO"] <- "In"
+PrimComps2$State[PrimComps2$State != "In"] <- "Out"
+PrimComps2$State <- as.factor(PrimComps2$State)
+
+#split the data into training & testing with Principle Components only
+Prin <- sample(2, nrow(PrimComps2), replace = TRUE, prob = c(0.7,0.3))
+trainPrin <- PrimComps2[Prin == 1,]
+testPrin <- PrimComps2[Prin==2,]
+
+#build a linear regression model
+trainPrin$Enroll <- as.factor(trainPrin$Enroll)
+set.seed(1)
+regPrin <- glm(Enroll ~ ., family = "binomial", data = trainPrin)
+summary(regPrin)
+predLR <- predict(regPrin, newdata = testPrin, type = "response")
+testPrin$Probability <- predLR
+class <- predLR >0.35
+table(testPrin$Enroll,class)
+
+###################################################################################################
 
 #Neural network with H2O package
 #start h20 instance
+
+h2oPCA <- as.h2o(PrimComps2, destination_frame = "PrimComps2")
 localH2O <- h2o.init(ip = "localhost", port = 54321, startH2O = TRUE)
 dim(h2oPCA)
 h2oPCA
@@ -99,19 +157,19 @@ test   <- h2o.assign(splits[[3]], "test.hex")  # 20%
 
 #model6 with a deep learning network (three layers of 50 nodes)
 dlmodel <- h2o.deeplearning(x=1:6,
-                           y=7,
-                           set.seed(789),
-                           training_frame = train,
-                           validation_frame = test,
-                           activation = "RectifierWithDropout",
-                           input_dropout_ratio = 0.1,
-                           hidden_dropout_ratios = c(0.5,0.5,0.5),
-                           hidden = c(200,200,200),
-                           epochs = 100,
-                           nfolds = 10,
-                           variable_importances = TRUE,
-                           overwrite_with_best_model = TRUE,
-                           balance_classes = TRUE)
+                            y=7,
+                            set.seed(789),
+                            training_frame = train,
+                            validation_frame = test,
+                            activation = "RectifierWithDropout",
+                            input_dropout_ratio = 0.1,
+                            hidden_dropout_ratios = c(0.5,0.5,0.5),
+                            hidden = c(200,200,200),
+                            epochs = 100,
+                            nfolds = 10,
+                            variable_importances = TRUE,
+                            overwrite_with_best_model = TRUE,
+                            balance_classes = TRUE)
 dlmodel
 head(as.data.frame(h2o.varimp(dlmodel)))
 
@@ -126,35 +184,3 @@ DLpred
 test$Accuracy <- DLpred$predict == test$Enroll
 1-mean(test$Accuracy)
 plot(dlmodel)
-
-#################################################################################################
-#break states into "in-state" and "out-of-state" to simplify the model
-PrimComps$State <- as.character(PrimComps$State)
-PrimComps$State[PrimComps$State == "CO"] <- "In"
-PrimComps$State[PrimComps$State != "In"] <- "Out"
-PrimComps$State <- as.factor(PrimComps$State)
-
-#split the data into training & testing with Principle Components only
-Prin <- sample(2, nrow(PrimComps), replace = TRUE, prob = c(0.7,0.3))
-trainPrin <- PrimComps[Prin == 1,]
-testPrin <- PrimComps[Prin==2,]
-
-#build a linear regression model
-trainPrin$Enroll <- as.factor(trainPrin$Enroll)
-regPrin <- glm(Enroll ~ ., family = "binomial", data = trainPrin)
-summary(regPrin)
-predLR <- predict(regPrin, newdata = testPrin, type = "response")
-testPrin$Probability <- predLR
-class <- predLR >0.35
-table(testPrin$Enroll,class)
-
-#################################################################################################
-
-#boosting with cross validation
-Admits2 <- SMOTE(Enroll ~ ., Admits, perc.over = 500)
-set.seed(5)
-Admits.boostcv <- boosting.cv(Enroll~., v=10, data = Admits2, mfinal=100)
-Admits.boostcv$confusion
-Admits.boostcv$error
-Admits2$Probability <- Admits.boostcv$class
-write.xlsx(Admits2, "D:/Practicum/Project Data/Final.xlsx")

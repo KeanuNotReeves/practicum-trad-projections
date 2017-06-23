@@ -28,20 +28,6 @@ Admits$Legacy <- as.factor(Admits$Legacy)
 Admits$Enroll <- as.factor(Admits$Enroll)
 Admits$Regis_Position <- as.factor(Admits$Regis_Position)
 
-#create a numeric dataset for correlations and PCA
-numAdmits <- Admits
-numAdmits$Gender <- as.numeric(numAdmits$Gender)
-numAdmits$Ethnic <- as.numeric(numAdmits$Ethnic)
-numAdmits$Religion <- as.numeric(numAdmits$Religion)
-numAdmits$FA_Intent <- as.numeric(numAdmits$FA_Intent)
-numAdmits$First_Gen <- as.numeric(numAdmits$First_Gen)
-numAdmits$HS_Type <- as.numeric(numAdmits$HS_Type)
-numAdmits$Visit <- as.numeric(numAdmits$Visit)
-numAdmits$Rating <- as.numeric(numAdmits$Rating)
-numAdmits$Legacy <- as.numeric(numAdmits$Legacy)
-numAdmits$Enroll <- as.numeric(numAdmits$Enroll)
-numAdmits$Regis_Position <- as.numeric(numAdmits$Regis_Position)
-numAdmits$State <- as.numeric(numAdmits$State)
 
 #perform EDA on the dataset
 str(Admits)
@@ -50,8 +36,6 @@ hist(Admits$Composite_Score, main = "Composite Score Distribution", xlab = "Comp
      ylab = "Number of Students")
 hist(Admits$Distance, main = "Distance From Campus Distribution", xlab = "Distance (miles)", 
      ylab = "Number of Students")
-corr <- cor(numAdmits, method = "pearson", use = "complete.obs")
-corrplot(corr, type = "upper", order = "hclust", tl.col = "black", tl.srt = 45)
 
 #Clean the data, removing or replacing NA's
 which((is.na(Admits$GPA)))
@@ -69,6 +53,24 @@ Admits$State <- as.factor(Admits$State)
 
 summary(Admits)
 
+#create a numeric dataset for correlations and PCA
+numAdmits <- Admits
+numAdmits$Gender <- as.numeric(numAdmits$Gender)
+numAdmits$Ethnic <- as.numeric(numAdmits$Ethnic)
+numAdmits$Religion <- as.numeric(numAdmits$Religion)
+numAdmits$FA_Intent <- as.numeric(numAdmits$FA_Intent)
+numAdmits$First_Gen <- as.numeric(numAdmits$First_Gen)
+numAdmits$HS_Type <- as.numeric(numAdmits$HS_Type)
+numAdmits$Visit <- as.numeric(numAdmits$Visit)
+numAdmits$Rating <- as.numeric(numAdmits$Rating)
+numAdmits$Legacy <- as.numeric(numAdmits$Legacy)
+numAdmits$Enroll <- as.numeric(numAdmits$Enroll)
+numAdmits$Regis_Position <- as.numeric(numAdmits$Regis_Position)
+numAdmits$State <- as.numeric(numAdmits$State)
+
+#correlation matrix
+corr <- cor(numAdmits, method = "pearson", use = "complete.obs")
+corrplot(corr, type = "upper", order = "hclust", tl.col = "black", tl.srt = 45)
 
 #Principle Component Analysis
 sub <-subset(numAdmits,select = -c(ID, Enroll))
@@ -203,11 +205,17 @@ predAdmits <- predict(regAdmits, newdata = testAdmits, type = "response")
 class <- predAdmits >0.35
 table(testAdmits$Enroll,class)
 
+
+
 #break states into "in-state" and "out-of-state" to simplify the model
 PrimComps$State <- as.character(PrimComps$State)
 PrimComps$State[PrimComps$State == "CO"] <- "In"
 PrimComps$State[PrimComps$State != "In"] <- "Out"
 PrimComps$State <- as.factor(PrimComps$State)
+
+ind6 <- sample(2, nrow(PrimComps), replace = TRUE, prob = c(0.8,0.2))
+trainPrin <- PrimComps[ind6 == 1,]
+testPrin <- PrimComps[ind6 == 2,]
 
 
 #build a linear regression model on PCA
@@ -221,14 +229,20 @@ class <- predLR >0.35
 table(testPrin$Enroll,class)
 
 
-#break states into "in-state" and "out-of-state" to simplify the model
-Admits$State <- as.character(Admits$State)
-Admits$State[Admits$State == "CO"] <- "In"
-Admits$State[Admits$State != "In"] <- "Out"
-Admits$State <- as.factor(Admits$State)
+
 
 ############################## SMOTE ################################
 #build a linear regression model on all Admits with balanced classes
+
+#break states into "in-state" and "out-of-state" to simplify the model
+Admits2$State <- as.character(Admits2$State)
+Admits2$State[Admits2$State == "CO"] <- "In"
+Admits2$State[Admits2$State != "In"] <- "Out"
+Admits2$State <- as.factor(Admits2$State)
+
+ind7 <- sample(2, nrow(Admits2), replace = TRUE, prob = c(0.8,0.2))
+trainAdmits2 <- Admits2[ind7 == 1,]
+testAdmits2 <- Admits2[ind7 == 2,]
 
 trainAdmits2$Enroll <- as.factor(trainAdmits2$Enroll)
 set.seed(7)
@@ -247,8 +261,8 @@ PrimComps2$State <- as.factor(PrimComps2$State)
 
 #split the data into training & testing with Principle Components only and balanced classes
 Prin2 <- sample(2, nrow(PrimComps2), replace = TRUE, prob = c(0.7,0.3))
-trainPrin2 <- PrimComps2[Prin == 1,]
-testPrin2 <- PrimComps2[Prin==2,]
+trainPrin2 <- PrimComps2[Prin2 == 1,]
+testPrin2 <- PrimComps2[Prin2 == 2,]
 
 #build a linear regression model with principle components & balanced classes
 trainPrin2$Enroll <- as.factor(trainPrin2$Enroll)

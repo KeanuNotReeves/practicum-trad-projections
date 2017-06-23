@@ -11,8 +11,8 @@ dim(dat_h2o)
 
 #model1 with a deep learning network (three layers of 50 nodes)
 set.seed(54321)
-model1 <- h2o.deeplearning(x=2:16,
-                           y=17,
+model1 <- h2o.deeplearning(x=1:15,
+                           y=16,
                            training_frame = dat_h2o,
                            activation = "RectifierWithDropout",
                            input_dropout_ratio = 0.2,
@@ -24,8 +24,8 @@ model1
 plot(model1, main = "Model 1")
 
 #model2 with three layers of 100 nodes
-model2 <- h2o.deeplearning(x=2:16,
-                           y=17,
+model2 <- h2o.deeplearning(x=1:15,
+                           y=16,
                            training_frame = dat_h2o,
                            activation = "RectifierWithDropout",
                            input_dropout_ratio = 0.2,
@@ -37,8 +37,8 @@ model2
 plot(model2, main = "Model 2")
 
 #model3 with three layers of 50 nodes and a Tanh activation
-model3 <- h2o.deeplearning(x=2:16,
-                           y=17,
+model3 <- h2o.deeplearning(x=1:15,
+                           y=16,
                            training_frame = dat_h2o,
                            activation = "TanhWithDropout",
                            input_dropout_ratio = 0.2,
@@ -51,8 +51,8 @@ plot(model3, main = "Model 3")
 
 #model4 with three layers of 50 nodes and a Tanh activation, no dropout
 set.seed(14)
-model4 <- h2o.deeplearning(x=2:16,
-                           y=17,
+model4 <- h2o.deeplearning(x=1:15,
+                           y=16,
                            training_frame = dat_h2o,
                            activation = "Tanh",
                            input_dropout_ratio = 0.2,
@@ -64,8 +64,8 @@ plot(model4, main = "Model 4")
 
 #model5 with three layers of 100 nodes and a Tanh activation, no dropout
 set.seed(14)
-model5 <- h2o.deeplearning(x=2:16,
-                           y=17,
+model5 <- h2o.deeplearning(x=1:15,
+                           y=16,
                            training_frame = dat_h2o,
                            activation = "Tanh",
                            input_dropout_ratio = 0.2,

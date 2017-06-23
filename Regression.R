@@ -55,10 +55,10 @@ testAdmits <- Admits[ind4 == 2,]
 
 
 #build a linear regression model
-trainPrin$Enroll <- as.factor(trainPrin$Enroll)
-regPrin <- glm(Enroll ~ ., family = "binomial", data = trainPrin)
-summary(regPrin)
-predLR <- predict(regPrin, newdata = testPrin, type = "response")
-testPrin$Probability <- predLR
+trainAdmits$Enroll <- as.factor(trainAdmits$Enroll)
+regAdmits <- glm(Enroll ~ ., family = "binomial", data = trainAdmits)
+summary(regAdmits)
+predLR <- predict(regAdmits, newdata = testAdmits, type = "response")
+testAdmits$Probability <- predLR
 class <- predLR >0.25
-table(testPrin$Enroll,class)
+table(testAdmits$Enroll,class)

@@ -229,8 +229,6 @@ class <- predLR >0.35
 table(testPrin$Enroll,class)
 
 
-
-
 ############################## SMOTE ################################
 #build a linear regression model on all Admits with balanced classes
 
@@ -275,23 +273,53 @@ class <- predLR2 >0.35
 table(testPrin$Enroll,class)
 
 ###################################################################################################
+################################## Decision Tree ##################################################
+
+#conditional inference tree on original data
+set.seed(9)
+CItree <- ctree(Enroll ~., data = trainAdmits)
+predCI <- predict(CItree, testAdmits)
+confusionMatrix(table(testAdmits$Enroll, predCI), positive = "Yes")
+
+#conditional inference tree on SMOTE data
+set.seed(10)
+CItree2 <- ctree(Enroll ~., data = trainAdmits2)
+predCI2 <- predict(CItree2, testAdmits2)
+confusionMatrix(table(testAdmits2$Enroll, predCI2), positive = "Yes")
+
+#conditional inference tree on PCA data
+set.seed(11)
+CItree3 <- ctree(Enroll ~., data = trainPrin)
+predCI3 <- predict(CItree3, testPrin)
+confusionMatrix(table(testPrin$Enroll, predCI3), positive = "Yes")
+
+#conditional inference tree on SMOTE data with PCA
+set.seed(12)
+CItree4 <- ctree(Enroll ~., data = trainPrin2)
+predCI4 <- predict(CItree4, testPrin2)
+confusionMatrix(table(testPrin2$Enroll, predCI4), positive = "Yes")
+
+
+###################################################################################################
+###################################################################################################
 
 #Neural network with H2O package
 #start h20 instance
-
-h2oPCA <- as.h2o(PrimComps2, destination_frame = "PrimComps2")
 localH2O <- h2o.init(ip = "localhost", port = 54321, startH2O = TRUE)
-dim(h2oPCA)
-h2oPCA
-splits <- h2o.splitFrame(h2oPCA, c(0.6,0.2), seed=1234)
+
+# Model on all Admits
+h2oAdmits <- as.h2o(Admits, destination_frame = "Admits")
+dim(h2oAdmits)
+h2oAdmits
+splits <- h2o.splitFrame(h2oAdmits, c(0.6,0.2), seed=1234)
 train  <- h2o.assign(splits[[1]], "train.hex") # 60%
 valid  <- h2o.assign(splits[[2]], "valid.hex") # 20%
 test   <- h2o.assign(splits[[3]], "test.hex")  # 20%
 
 
-#model6 with a deep learning network (three layers of 50 nodes)
-dlmodel <- h2o.deeplearning(x=1:6,
-                            y=7,
+#model with a deep learning network (three layers of 50 nodes)
+dlmodel1 <- h2o.deeplearning(x=2:16,
+                            y=17,
                             set.seed(789),
                             training_frame = train,
                             validation_frame = test,
@@ -304,17 +332,144 @@ dlmodel <- h2o.deeplearning(x=1:6,
                             variable_importances = TRUE,
                             overwrite_with_best_model = TRUE,
                             balance_classes = TRUE)
-dlmodel
-head(as.data.frame(h2o.varimp(dlmodel)))
+dlmodel1
+head(as.data.frame(h2o.varimp(dlmodel1)))
+h2o.varimp_plot(dlmodel1)
 
 #h2o.performance(dlmodel, train = T)
-h2o.performance(dlmodel, valid = T)
+#h2o.performance(dlmodel, valid = T)
 #h2o.performance(dlmodel, newdata = train)
-h2o.performance(dlmodel, newdata = valid)
-h2o.performance(dlmodel, newdata = test)
+#h2o.performance(dlmodel, newdata = valid)
+#h2o.performance(dlmodel, newdata = test)
 
-DLpred <- h2o.predict(dlmodel, test)
-DLpred
-test$Accuracy <- DLpred$predict == test$Enroll
+DLpred1 <- h2o.predict(dlmodel1, test)
+DLpred1
+test$Accuracy <- DLpred1$predict == test$Enroll
 1-mean(test$Accuracy)
-plot(dlmodel)
+plot(dlmodel1)
+
+##############################################################
+#Model on SMOTE admits
+h2oAdmits2 <- as.h2o(Admits2, destination_frame = "Admits2")
+dim(h2oAdmits2)
+h2oAdmits2
+splits2 <- h2o.splitFrame(h2oAdmits2, c(0.6,0.2), seed=1234)
+train2  <- h2o.assign(splits[[1]], "train2.hex") # 60%
+valid2  <- h2o.assign(splits[[2]], "valid2.hex") # 20%
+test2   <- h2o.assign(splits[[3]], "test2.hex")  # 20%
+
+
+#model with a deep learning network (three layers of 50 nodes)
+dlmodel2 <- h2o.deeplearning(x=2:16,
+                             y=17,
+                             set.seed(789),
+                             training_frame = train2,
+                             validation_frame = test2,
+                             activation = "RectifierWithDropout",
+                             input_dropout_ratio = 0.1,
+                             hidden_dropout_ratios = c(0.5,0.5,0.5),
+                             hidden = c(50,50,50),
+                             epochs = 100,
+                             nfolds = 10,
+                             variable_importances = TRUE,
+                             overwrite_with_best_model = TRUE,
+                             balance_classes = TRUE)
+dlmodel2
+head(as.data.frame(h2o.varimp(dlmodel2)))
+h2o.varimp_plot(dlmodel2)
+
+#h2o.performance(dlmodel, train = T)
+#h2o.performance(dlmodel, valid = T)
+#h2o.performance(dlmodel, newdata = train)
+#h2o.performance(dlmodel, newdata = valid)
+#h2o.performance(dlmodel, newdata = test)
+
+DLpred2 <- h2o.predict(dlmodel2, test2)
+DLpred2
+test2$Accuracy <- DLpred2$predict == test2$Enroll
+1-mean(test2$Accuracy)
+plot(dlmodel2)
+
+##############################################################
+#Model on PCA
+h2oPCA <- as.h2o(PrimComps, destination_frame = "PrimComps")
+dim(h2oPCA)
+h2oPCA
+splits3 <- h2o.splitFrame(h2oPCA, c(0.6,0.2), seed=1234)
+train3  <- h2o.assign(splits[[1]], "train3hex") # 60%
+valid3  <- h2o.assign(splits[[2]], "valid3.hex") # 20%
+test3  <- h2o.assign(splits[[3]], "test3.hex")  # 20%
+
+
+#model with a deep learning network (three layers of 50 nodes)
+dlmodel3 <- h2o.deeplearning(x=1:6,
+                             y=7,
+                             set.seed(789),
+                             training_frame = train3,
+                             validation_frame = test3,
+                             activation = "RectifierWithDropout",
+                             input_dropout_ratio = 0.1,
+                             hidden_dropout_ratios = c(0.5,0.5,0.5),
+                             hidden = c(50,50,50),
+                             epochs = 100,
+                             nfolds = 10,
+                             variable_importances = TRUE,
+                             overwrite_with_best_model = TRUE,
+                             balance_classes = TRUE)
+dlmodel3
+head(as.data.frame(h2o.varimp(dlmodel3)))
+h2o.varimp_plot(dlmodel3)
+
+#h2o.performance(dlmodel, train = T)
+#h2o.performance(dlmodel, valid = T)
+#h2o.performance(dlmodel, newdata = train)
+#h2o.performance(dlmodel, newdata = valid)
+#h2o.performance(dlmodel, newdata = test)
+
+DLpred3 <- h2o.predict(dlmodel3, test3)
+DLpred3
+test3$Accuracy <- DLpred3predict == test3$Enroll
+1-mean(test3$Accuracy)
+plot(dlmodel3)
+
+##############################################################
+#Model on SMOTE PCA
+h2oPCA2 <- as.h2o(PrimComps2, destination_frame = "PrimComps2")
+dim(h2oPCA2)
+h2oPCA2
+splits4 <- h2o.splitFrame(h2oPCA2, c(0.6,0.2), seed=1234)
+train4 <- h2o.assign(splits[[1]], "train3hex") # 60%
+valid4 <- h2o.assign(splits[[2]], "valid3.hex") # 20%
+test4 <- h2o.assign(splits[[3]], "test3.hex")  # 20%
+
+
+#model with a deep learning network (three layers of 50 nodes)
+dlmodel4 <- h2o.deeplearning(x=1:6,
+                             y=7,
+                             set.seed(789),
+                             training_frame = train,
+                             validation_frame = test,
+                             activation = "RectifierWithDropout",
+                             input_dropout_ratio = 0.1,
+                             hidden_dropout_ratios = c(0.5,0.5,0.5),
+                             hidden = c(50,50,50),
+                             epochs = 100,
+                             nfolds = 10,
+                             variable_importances = TRUE,
+                             overwrite_with_best_model = TRUE,
+                             balance_classes = TRUE)
+dlmodel4
+head(as.data.frame(h2o.varimp(dlmodel4)))
+h2o.varimp_plot(dlmodel4)
+
+#h2o.performance(dlmodel, train = T)
+#h2o.performance(dlmodel, valid = T)
+#h2o.performance(dlmodel, newdata = train)
+#h2o.performance(dlmodel, newdata = valid)
+#h2o.performance(dlmodel, newdata = test)
+
+DLpred4 <- h2o.predict(dlmodel4, test4)
+DLpred4
+test4$Accuracy <- DLpred4predict == test4$Enroll
+1-mean(test4$Accuracy)
+plot(dlmodel4)

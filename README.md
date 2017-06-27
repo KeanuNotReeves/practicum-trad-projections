@@ -91,6 +91,8 @@ Admits2 <- SMOTE(Enroll ~ ., Admits, perc.over = 500)
 
 In addition, I also employed a principle component analysis (PCA) technique to try and identify variables that may be describing the same variance in the dataset. 
 
+![biplot](https://user-images.githubusercontent.com/17519823/27610211-a7392ff2-5b4a-11e7-9501-f6763ccca56a.png)
+
 ### **Summary**
 
 The working model created by the analysis is a great first step, and in many ways is Regis University's first foray into the realm of Data Science. The model should be implemented in January 2018, and with that we are hoping to use it to highlight certain ways that we can expand upon our data collection practices to build a better model in the future.     

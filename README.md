@@ -89,9 +89,33 @@ Admits2 <- SMOTE(Enroll ~ ., Admits, perc.over = 500)
 ```
 ![smote](https://user-images.githubusercontent.com/17519823/27609865-87292704-5b49-11e7-98ea-8695e1bf9ce4.png)
 
-In addition, I also employed a principle component analysis (PCA) technique to try and identify variables that may be describing the same variance in the dataset. 
+In addition, I also employed a principle component analysis (PCA) technique to try and identify variables that may be describing the same variance in the dataset. (The data had to be converted into all numeric values to complete the PCA). The biplot shows us that a lot of factors share vectors, meaning that they explain the same type of variance. The scree plot shows us that in order to successfully explain 90% of the variance in our data, we only need to use about 5 components. The PCA rotation shows us which 5 components to select, and from this we ended up with a dataset containing 7 features including : **Rating**, **FA Intent**, **State**, **Visit**, **Time between App and Term**, **Regis Position** and **Enroll**.
+
+```R
+sub <-subset(numAdmits,select = -c(ID, Enroll))
+pca <- prcomp(sub, scale. = T)
+pca$rotation
+dim(pca$x)
+biplot(pca, scale = 0)
+std_dev <- pca$sdev
+pca_var <- std_dev^2
+prop_varex <- pca_var/sum(pca_var)
+plot(prop_varex, main = "Scree Plot", xlab = "Principal Component", 
+     ylab = "Proportion of Variance Explained", type = "b")
+plot(cumsum(prop_varex), main = "Cumulative Sum of Variance", 
+     xlab = "Principal Component", ylab = "Cumulative Proportion of Variance Explained", type = "b")
+
+PrimComps <- subset(Admits, select = c(Rating, FA_Intent, State, Visit, Time_between_App_and_Term, Regis_Position, Enroll))
+PrimComps$Rating <- as.factor(PrimComps$Rating)
+PrimComps$State <- as.factor(PrimComps$State)
+PrimComps$Visit <- as.factor(PrimComps$Visit)
+PrimComps$FA_Intent <- as.factor(PrimComps$FA_Intent)
+```
 
 ![biplot](https://user-images.githubusercontent.com/17519823/27610211-a7392ff2-5b4a-11e7-9501-f6763ccca56a.png)
+
+![scree](https://user-images.githubusercontent.com/17519823/27610309-0dcdf360-5b4b-11e7-89f9-53e24266e23d.png)
+
 
 ### **Summary**
 

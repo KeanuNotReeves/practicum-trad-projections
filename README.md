@@ -56,6 +56,19 @@ hist(Admits$Composite_Score, main = "Composite Score Distribution", xlab = "Comp
      ylab = "Number of Students")
 hist(Admits$Distance, main = "Distance From Campus Distribution", xlab = "Distance (miles)", 
      ylab = "Number of Students")
+     
+which((is.na(Admits$GPA)))
+Admits$GPA[is.na(Admits$GPA)] <- with(Admits, median(Admits$GPA, na.rm = TRUE))
+which((is.na(Admits$GPA)))
+
+which(is.na(Admits$Distance))
+Admits$Distance[is.na(Admits$Distance)] <- with(Admits, max(Admits$Distance, na.rm = TRUE))
+which(is.na(Admits$Distance))
+
+which(is.na(Admits$State))
+Admits$State[is.na(Admits$State)] <- "International"
+which(is.na(Admits$State))
+Admits$State <- as.factor(Admits$State)
 ```
 
 ### **Analysis methods**
@@ -121,7 +134,9 @@ PrimComps$FA_Intent <- as.factor(PrimComps$FA_Intent)
 
 The working model created by the analysis is a great first step, and in many ways is Regis University's first foray into the realm of Data Science. The model should be implemented in January 2018, and with that we are hoping to use it to highlight certain ways that we can expand upon our data collection practices to build a better model in the future.     
 
-What this initial model really highlighted was that if we want to predict who is coming to Regis, we need to look at any data points that reflect how a student feel about Regis University. Test scores, ethnicity, state; none of these things really mattered in the model because they really tell us nothing about the student. What told us everything was: visit, FA_intent, Regis Position and the time between the term and their app being submitted. THese data points reflect a student's feelings towards us, and therefore better predict if a student will come here. 
+What this initial model really highlighted was that if we want to predict who is coming to Regis, we need to look at any data points that reflect how a student feel about Regis University. Test scores, ethnicity, state; none of these things really mattered in the model because they really tell us nothing about the student. What told us everything was: visit, FA_intent, Regis Position and the time between the term and their app being submitted. These data points reflect a student's feelings towards us, and therefore better predict if a student will come here. 
+
+To continue to build upon the model, we hope that showing this to various groups at Regis Universty will propel them to try and collect more data that can provide insight into a student's feelings towards the university. Things like how often the student contacts the their Admissions Counselor, or visits our landing page are items at the top of the list for exploration.
 
 ### **References**
 

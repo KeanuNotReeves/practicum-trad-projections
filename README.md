@@ -133,7 +133,7 @@ PrimComps$FA_Intent <- as.factor(PrimComps$FA_Intent)
 ![scree](https://user-images.githubusercontent.com/17519823/27610309-0dcdf360-5b4b-11e7-89f9-53e24266e23d.png)
 
 #### **Improved Models**
-  Using the methods outlined above, I retrained some models to see how using SMOTE and PCA would improve class recall. The table below illustrates the model improvements before and after each method was applied. 
+  Using the methods outlined above, I retrained some models to see how using SMOTE and PCA would improve class recall. The table below illustrates the model improvements before and after each method was applied. The table clearly shows that using the SMOTE method dramatically increased the class recall of every model, more so that the PCA did alone.
 
 ![more models](https://user-images.githubusercontent.com/17519823/27612133-6525f6f6-5b52-11e7-8b59-cdea659939ee.png)
 

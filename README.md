@@ -94,6 +94,8 @@ You can see that while each model's accuracy is relatively high, the positive cl
 
 ![class imbalance](https://user-images.githubusercontent.com/17519823/27609674-d85fcd68-5b48-11e7-9b58-9cfe7c8e947b.png)
 
+
+#### **SMOTE**    
 To try to remedy the class imbalance, I implemented a method called Synthetic Minority Oversampling Technique (SMOTE, from the DMwR package). SMOTE employs a k-Nearest Neighbor algorithm to build clusters of similar cases. Using these clusters, it creates synthetic cases in the minority class (in this case Enroll = "Yes") to balance the target variable. This then challenges the model to not just predict everyone as a "No", thus achieving an accuracy of 84%, but rather challenges it to actually look for patterns to predict a "Yes" correctly.    
 
 ```R
@@ -102,6 +104,7 @@ Admits2 <- SMOTE(Enroll ~ ., Admits, perc.over = 500)
 ```
 ![smote](https://user-images.githubusercontent.com/17519823/27609865-87292704-5b49-11e7-98ea-8695e1bf9ce4.png)
 
+#### **PCA**    
 In addition, I also employed a principle component analysis (PCA) technique to try and identify variables that may be describing the same variance in the dataset. (The data had to be converted into all numeric values to complete the PCA). The biplot shows us that a lot of factors share vectors, meaning that they explain the same type of variance. The scree plot shows us that in order to successfully explain 90% of the variance in our data, we only need to use about 5 components. The PCA rotation shows us which 5 components to select, and from this we ended up with a dataset containing 7 features including : **Rating**, **FA Intent**, **State**, **Visit**, **Time between App and Term**, **Regis Position** and **Enroll**.
 
 ```R
@@ -129,6 +132,10 @@ PrimComps$FA_Intent <- as.factor(PrimComps$FA_Intent)
 
 ![scree](https://user-images.githubusercontent.com/17519823/27610309-0dcdf360-5b4b-11e7-89f9-53e24266e23d.png)
 
+#### **Improved Models**
+Using the methods outlined above, I retrained some models to see how using SMOTE and PCA would improve class recall. The table below illustrates the model improvements before and after each method was applied. 
+
+![more models](https://user-images.githubusercontent.com/17519823/27612133-6525f6f6-5b52-11e7-8b59-cdea659939ee.png)
 
 ### **Summary**
 

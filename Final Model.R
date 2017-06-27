@@ -96,8 +96,13 @@ PrimComps$FA_Intent <- as.factor(PrimComps$FA_Intent)
 fold <- table(Admits$Enroll)
 colors <- c("#F1C400","#002B49")
 pie(fold, main = "Enrolled Status for All Admits", col = colors)
+
 Admits2 <- SMOTE(Enroll ~ ., Admits, perc.over = 500)
 PrimComps2 <- SMOTE(Enroll ~ ., PrimComps, perc.over = 500)
+
+fold2 <- table(Admits2$Enroll)
+colors <- c("#F1C400","#002B49")
+pie(fold2, main = "Enrolled Status for All Admits with SMOTE", col = colors)
 
 #################################################################################################
 #################################################################################################
@@ -354,9 +359,9 @@ h2oAdmits2 <- as.h2o(Admits2, destination_frame = "Admits2")
 dim(h2oAdmits2)
 h2oAdmits2
 splits2 <- h2o.splitFrame(h2oAdmits2, c(0.6,0.2), seed=1234)
-train2  <- h2o.assign(splits[[1]], "train2.hex") # 60%
-valid2  <- h2o.assign(splits[[2]], "valid2.hex") # 20%
-test2   <- h2o.assign(splits[[3]], "test2.hex")  # 20%
+train2  <- h2o.assign(splits2[[1]], "train2.hex") # 60%
+valid2  <- h2o.assign(splits2[[2]], "valid2.hex") # 20%
+test2   <- h2o.assign(splits2[[3]], "test2.hex")  # 20%
 
 
 #model with a deep learning network (three layers of 50 nodes)
@@ -396,9 +401,9 @@ h2oPCA <- as.h2o(PrimComps, destination_frame = "PrimComps")
 dim(h2oPCA)
 h2oPCA
 splits3 <- h2o.splitFrame(h2oPCA, c(0.6,0.2), seed=1234)
-train3  <- h2o.assign(splits[[1]], "train3hex") # 60%
-valid3  <- h2o.assign(splits[[2]], "valid3.hex") # 20%
-test3  <- h2o.assign(splits[[3]], "test3.hex")  # 20%
+train3  <- h2o.assign(splits3[[1]], "train3hex") # 60%
+valid3  <- h2o.assign(splits3[[2]], "valid3.hex") # 20%
+test3  <- h2o.assign(splits3[[3]], "test3.hex")  # 20%
 
 
 #model with a deep learning network (three layers of 50 nodes)
@@ -428,7 +433,7 @@ h2o.varimp_plot(dlmodel3)
 
 DLpred3 <- h2o.predict(dlmodel3, test3)
 DLpred3
-test3$Accuracy <- DLpred3predict == test3$Enroll
+test3$Accuracy <- DLpred3$predict == test3$Enroll
 1-mean(test3$Accuracy)
 plot(dlmodel3)
 
@@ -438,17 +443,17 @@ h2oPCA2 <- as.h2o(PrimComps2, destination_frame = "PrimComps2")
 dim(h2oPCA2)
 h2oPCA2
 splits4 <- h2o.splitFrame(h2oPCA2, c(0.6,0.2), seed=1234)
-train4 <- h2o.assign(splits[[1]], "train3hex") # 60%
-valid4 <- h2o.assign(splits[[2]], "valid3.hex") # 20%
-test4 <- h2o.assign(splits[[3]], "test3.hex")  # 20%
+train4 <- h2o.assign(splits4[[1]], "train4.hex") # 60%
+valid4 <- h2o.assign(splits4[[2]], "valid4.hex") # 20%
+test4 <- h2o.assign(splits4[[3]], "test4.hex")  # 20%
 
 
 #model with a deep learning network (three layers of 50 nodes)
 dlmodel4 <- h2o.deeplearning(x=1:6,
                              y=7,
                              set.seed(789),
-                             training_frame = train,
-                             validation_frame = test,
+                             training_frame = train4,
+                             validation_frame = test4,
                              activation = "RectifierWithDropout",
                              input_dropout_ratio = 0.1,
                              hidden_dropout_ratios = c(0.5,0.5,0.5),

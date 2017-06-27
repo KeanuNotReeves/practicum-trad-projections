@@ -15,7 +15,7 @@ The data has 7,000 samples and 16 features including ID, Gender, Ethnic, Religio
 
 ### **EDA (Exploratory Data Analysis)**  
 
-EDA was performed by looking at the structure of the model and summary statistics. THis showed a number of missing values that needed to be cleaned. 
+EDA was performed by looking at the structure of the model and summary statistics. This showed a number of missing values that needed to be cleaned. 
 
 ### **Analysis methods**
 
@@ -32,9 +32,20 @@ Logistic Regression
 
 ### **Results**
 
-You can make model(s) comparison if you have multiple approaches. You may include any tables or graphs that summarizes your result(s). Your conclusion, any discussions on difficulties (why some approach didn't work), and any ideas how you may overcome those. If you have external demo website, you can include a link your webapp.
+To begin the project I used the raw data to train the models and output their class recall and overall accuracies. The table below shows how each model performed on the data.
 
-![alt text](D:\Practicum\Model.png "Preliminary Models")
+![model](https://user-images.githubusercontent.com/17519823/27606569-12fcf7d0-5b3e-11e7-8d9b-6f0cb1c33e0f.png)
+
+You can see that while each model's accuracy is relatively high, the positive class recall is low. This is the baseline we are trying to improve upon. The first step in model improvement, was to dive in and see what may cause high accuracy and low recall. In my dataset this seems to be caused primarily by an imbalance in the target variable class (with a 6:1 ratio), and perhaps too many variables.     
+
+To try to remedy the class imbalance, I implemented a method called Synthetic Minority Oversampling Technique (SMOTE, from the DMwR package). SMOTE employs a k-Nearest Neighbor algorithm to build clusters of similar cases. Using these clusters, it creates synthetic cases in the minority class (in this case Enroll = "Yes") to balance the target variable. This then challenges the model to not just predict everyone as a "No", thus achieving an accuracy of 84%, but rather challenges it to actually look for patterns to predict a "Yes" correctly.    
+
+```R
+library(DMwR)
+Admits2 <- SMOTE(Enroll ~ ., Admits, perc.over = 500)
+```
+
+In addition, I also employed a principle component analysis (PCA) technique to try and identify variables that may be describing the same variance in the dataset. 
 
 ### **Summary**
 
@@ -43,6 +54,8 @@ The working model created by the analysis is a great first step, and in many way
 What this initial model really highlighted was that if we want to predict who is coming to Regis, we need to look at any data points that reflect how a student feel about Regis University. Test scores, ethnicity, state; none of these things really mattered in the model because they really tell us nothing about the student. What told us everything was: visit, FA_intent, Regis Position and the time between the term and their app being submitted. THese data points reflect a student's feelings towards us, and therefore better predict if a student will come here. 
 
 ### **References**
+
+SMOTE - https://www.jair.org/media/953/live-953-2037-jair.pdf
 
 
 #### **Variables Explained**

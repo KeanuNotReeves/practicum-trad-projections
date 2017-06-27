@@ -77,12 +77,12 @@ In an effort to optimize the model as much as possible, I evaluated a number of 
 
 I evaluated the following models:
 
-Neural Network (h2o)
-Conditional Inference Tree (randomForest)
-Support Vector Machine (caret)
-Bagging (adabag)
-Boosting (adabag)
-Logistic Regression (caret)
+1. Neural Network (h2o)
+2. Conditional Inference Tree (randomForest)
+3. Support Vector Machine (caret)
+4. Bagging (adabag)
+5. Boosting (adabag)
+6. Logistic Regression (caret)
 
 ### **Results**
 

@@ -87,7 +87,7 @@ To try to remedy the class imbalance, I implemented a method called Synthetic Mi
 library(DMwR)
 Admits2 <- SMOTE(Enroll ~ ., Admits, perc.over = 500)
 ```
-
+![smote](https://user-images.githubusercontent.com/17519823/27609865-87292704-5b49-11e7-98ea-8695e1bf9ce4.png)
 
 In addition, I also employed a principle component analysis (PCA) technique to try and identify variables that may be describing the same variance in the dataset. 
 

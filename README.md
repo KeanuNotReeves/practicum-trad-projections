@@ -79,7 +79,7 @@ To begin the project I used the raw data to train the models and output their cl
 
 You can see that while each model's accuracy is relatively high, the positive class recall is low. This is the baseline we are trying to improve upon. The first step in model improvement, was to dive in and see what may cause high accuracy and low recall. In my dataset this seems to be caused primarily by an imbalance in the target variable class (with a 6:1 ratio), and perhaps too many variables. 
 
-
+![class imbalance](https://user-images.githubusercontent.com/17519823/27609674-d85fcd68-5b48-11e7-9b58-9cfe7c8e947b.png)
 
 To try to remedy the class imbalance, I implemented a method called Synthetic Minority Oversampling Technique (SMOTE, from the DMwR package). SMOTE employs a k-Nearest Neighbor algorithm to build clusters of similar cases. Using these clusters, it creates synthetic cases in the minority class (in this case Enroll = "Yes") to balance the target variable. This then challenges the model to not just predict everyone as a "No", thus achieving an accuracy of 84%, but rather challenges it to actually look for patterns to predict a "Yes" correctly.    
 
@@ -87,6 +87,7 @@ To try to remedy the class imbalance, I implemented a method called Synthetic Mi
 library(DMwR)
 Admits2 <- SMOTE(Enroll ~ ., Admits, perc.over = 500)
 ```
+
 
 In addition, I also employed a principle component analysis (PCA) technique to try and identify variables that may be describing the same variance in the dataset. 
 

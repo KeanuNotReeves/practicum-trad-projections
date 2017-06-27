@@ -11,11 +11,52 @@ I acquired data from Regis University's data warehouse in accordance with the pa
 
 ### **The Data**    
 
-The data has 7,000 samples and 16 features including ID, Gender, Ethnic, Religion, First Generation, High School Type, Distance, State, Composite Score, High School GPA, Rating, Visit, Legacy, Regis Position, Time between Application Submitted and Term Start, and Enroll. The data has 11 categorical variables and 5 numeric. The target variable is Enroll, which is a factor with two levels ("Yes" and "No").    
+The data has 7,000 samples and 16 features including:
+
+**ID**: A unique identifier of every student (not their actual student ID).
+
+**Gender**: Male (M) or Female (F)
+
+**Ethnic**: The student's self identified ethnicity (AN = American-Indian/Alaska Native, AS = Asian, BL = Black/African-American,                     HIS =     Hispanic, HP = Hawaiian/Pacific Islander, Multiple = Multiple Ethnicities Reported, NR = Non-Resident Alien,                     Unknown = Unknown, WH = White)
+
+**Religion**: The student's self identified religious belief. (BP = Baptist, BU = Buddhist, EP = Episcopalian, GO = Greek Orthodox,                     HU = Hindu, IS = Islam, JW = Jewish, LD = Latter Day Saints, LU = Lutheran, ME = Methodist, NA = Not Applicable,                           OP = Other Protestant, OT = Other, PB = Protestant, RC = Roman Catholic, UN = Unknown)
+
+**First_Gen**: Yes, if the student is the first member of their family to attend college.
+
+**HS_Type**: The type of high school the student attended.
+
+**Distance**: The calculated distance from campus based on the zipcode of the student.
+
+**State**: The residence state of the student.
+
+**Composite Score**: A calculated score to translate ACT & SAT scores to a common scale.
+
+**GPA**: The student's high school GPA.
+
+**Rating**: The calculated rating of a student's desirability. (1 is lowest, 5 is highest).
+
+**Visit**: Yes, if the student visited campus.
+
+**Legacy**: Yes, if the student is a legacy at Regis University.
+
+**Regis_Position**: The ranking the student gave to Regis University for colleges they would like to attend from their FAFSA file.
+
+**Time_between_App_and_Term**: The calculated number of days between a student's application submissions and the beginning of the term.
+
+**Enroll**: The target variable. Yes, if the student ended up enrolling at Regis University.    
 
 ### **EDA (Exploratory Data Analysis)**  
 
 EDA was performed by looking at the structure of the model and summary statistics. This showed a number of missing values that needed to be cleaned. 
+
+```R
+str(Admits)
+summary(Admits)
+hist(Admits$Composite_Score, main = "Composite Score Distribution", xlab = "Composite Score", 
+     ylab = "Number of Students")
+hist(Admits$Distance, main = "Distance From Campus Distribution", xlab = "Distance (miles)", 
+     ylab = "Number of Students")
+```
 
 ### **Analysis methods**
 
@@ -23,12 +64,12 @@ In an effort to optimize the model as much as possible, I evaluated a number of 
 
 I evaluated the following models:
 
-Neural Network (with varied activation functions, hidden layers and nodes)
-Conditional Inference Tree
-Support Vector Machine
-Bagging
-Boosting
-Logistic Regression
+Neural Network (h2o)
+Conditional Inference Tree (randomForest)
+Support Vector Machine (caret)
+Bagging (adabag)
+Boosting (adabag)
+Logistic Regression (caret)
 
 ### **Results**
 
@@ -36,7 +77,9 @@ To begin the project I used the raw data to train the models and output their cl
 
 ![model](https://user-images.githubusercontent.com/17519823/27606569-12fcf7d0-5b3e-11e7-8d9b-6f0cb1c33e0f.png)
 
-You can see that while each model's accuracy is relatively high, the positive class recall is low. This is the baseline we are trying to improve upon. The first step in model improvement, was to dive in and see what may cause high accuracy and low recall. In my dataset this seems to be caused primarily by an imbalance in the target variable class (with a 6:1 ratio), and perhaps too many variables.     
+You can see that while each model's accuracy is relatively high, the positive class recall is low. This is the baseline we are trying to improve upon. The first step in model improvement, was to dive in and see what may cause high accuracy and low recall. In my dataset this seems to be caused primarily by an imbalance in the target variable class (with a 6:1 ratio), and perhaps too many variables. 
+
+
 
 To try to remedy the class imbalance, I implemented a method called Synthetic Minority Oversampling Technique (SMOTE, from the DMwR package). SMOTE employs a k-Nearest Neighbor algorithm to build clusters of similar cases. Using these clusters, it creates synthetic cases in the minority class (in this case Enroll = "Yes") to balance the target variable. This then challenges the model to not just predict everyone as a "No", thus achieving an accuracy of 84%, but rather challenges it to actually look for patterns to predict a "Yes" correctly.    
 
@@ -56,38 +99,3 @@ What this initial model really highlighted was that if we want to predict who is
 ### **References**
 
 SMOTE - https://www.jair.org/media/953/live-953-2037-jair.pdf
-
-
-#### **Variables Explained**
-
-ID: A unique identifier of every student (not their actual student ID).
-
-Gender: Male (M) or Female (F)
-
-Ethnic: The student's self identified ethnicity (AN = American-Indian/Alaska Native, AS = Asian, BL = Black/African-American,                     HIS =     Hispanic, HP = Hawaiian/Pacific Islander, Multiple = Multiple Ethnicities Reported, NR = Non-Resident Alien,                     Unknown = Unknown, WH = White)
-
-Religion: The student's self identified religious belief. (BP = Baptist, BU = Buddhist, EP = Episcopalian, GO = Greek Orthodox,                     HU = Hindu, IS = Islam, JW = Jewish, LD = Latter Day Saints, LU = Lutheran, ME = Methodist, NA = Not Applicable,                           OP = Other Protestant, OT = Other, PB = Protestant, RC = Roman Catholic, UN = Unknown)
-
-First_Gen: Yes, if the student is the first member of their family to attend college.
-
-HS_Type: The type of high school the student attended.
-
-Distance: The calculated distance from campus based on the zipcode of the student.
-
-State: The residence state of the student.
-
-Composite Score: A calculated score to translate ACT & SAT scores to a common scale.
-
-GPA: The student's high school GPA.
-
-Rating: The calculated rating of a student's desirability. (1 is lowest, 5 is highest).
-
-Visit: Yes, if the student visited campus.
-
-Legacy: Yes, if the student is a legacy at Regis University.
-
-Regis_Position: The ranking the student gave to Regis University for colleges they would like to attend from their FAFSA file.
-
-Time_between_App_and_Term: The calculated number of days between a student's application submissions and the beginning of the term.
-
-Enroll: The target variable. Yes, if the student ended up enrolling at Regis University.

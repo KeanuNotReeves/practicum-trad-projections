@@ -135,7 +135,91 @@ PrimComps$FA_Intent <- as.factor(PrimComps$FA_Intent)
 #### **Improved Models**
   Using the methods outlined above, I retrained some models to see how using SMOTE and PCA would improve class recall. The table below illustrates the model improvements before and after each method was applied. The table clearly shows that using the SMOTE method dramatically increased the class recall of every model, more so that the PCA did alone.
 
-![more models](https://user-images.githubusercontent.com/17519823/27612133-6525f6f6-5b52-11e7-8b59-cdea659939ee.png)
+![more models](https://user-images.githubusercontent.com/17519823/27708286-a688b848-5cd5-11e7-949f-68264eab99bc.png)
+
+  In the end, using Principle Component Analysis did not help with modeling as much as the SMOTE technique did. Using SMOTE to balance the classes, we can use either the boosting, or regression algorithm we can build a model off of previous years data to assign a probability of enrollment to new, unscored, data. THe final code to compete this task is below. 
+  
+```R
+library(readxl)
+library(DMwR)
+library(adabag)
+library(e1071)
+library(xlsx)
+
+######################## bring in the 15FA & 16FA data ###########################
+X15FA <- as.data.frame(read_excel("D:/Practicum/Project Data/15FA/15FA Final.xlsx",sheet = "15FA"))
+X16FA <- as.data.frame(read_excel("D:/Practicum/Project Data/16FA/16FA Final.xlsx",sheet = "Final"))
+X17FA <- as.data.frame(read_excel("D:/Practicum/Project Data/17FA/17FA Final.xlsx",sheet = "Final"))
+
+Admits <- rbind(X15FA, X16FA)
+
+################### set variable types ##########################
+Admits$Gender <- as.factor(Admits$Gender)
+Admits$Ethnic <- as.factor(Admits$Ethnic)
+Admits$Religion <- as.factor(Admits$Religion)
+Admits$FA_Intent <- as.factor(Admits$FA_Intent)
+Admits$First_Gen <- as.factor(Admits$First_Gen)
+Admits$HS_Type <- as.factor(Admits$HS_Type)
+Admits$Visit <- as.factor(Admits$Visit)
+Admits$Rating <- as.factor(Admits$Rating)
+Admits$Legacy <- as.factor(Admits$Legacy)
+Admits$Enroll <- as.factor(Admits$Enroll)
+Admits$Regis_Position <- as.factor(Admits$Regis_Position)
+
+X17FA$Gender <- as.factor(X17FA$Gender)
+X17FA$Ethnic <- as.factor(X17FA$Ethnic)
+X17FA$Religion <- as.factor(X17FA$Religion)
+X17FA$FA_Intent <- as.factor(X17FA$FA_Intent)
+X17FA$First_Gen <- as.factor(X17FA$First_Gen)
+X17FA$HS_Type <- as.factor(X17FA$HS_Type)
+X17FA$State <- as.factor(X17FA$State)
+X17FA$Rating <- as.factor(X17FA$Rating)
+X17FA$Visit <- as.factor(X17FA$Visit)
+X17FA$Legacy <- as.factor(X17FA$Legacy)
+X17FA$Regis_Position <- as.factor(X17FA$Regis_Position)
+X17FA$Enroll <- as.factor(X17FA$Enroll)
+
+############## Clean the data, removing or replacing NA's #######################
+which((is.na(Admits$GPA)))
+Admits$GPA[is.na(Admits$GPA)] <- with(Admits, median(Admits$GPA, na.rm = TRUE))
+which((is.na(Admits$GPA)))
+
+which(is.na(Admits$Distance))
+Admits$Distance[is.na(Admits$Distance)] <- with(Admits, max(Admits$Distance, na.rm = TRUE))
+which(is.na(Admits$Distance))
+
+which(is.na(Admits$State))
+Admits$State[is.na(Admits$State)] <- "International"
+which(is.na(Admits$State))
+Admits$State <- as.factor(Admits$State)
+
+X17FA$GPA[is.na(X17FA$GPA)] <- with(X17FA, median(X17FA$GPA, na.rm = TRUE))
+X17FA$Distance[is.na(X17FA$Distance)] <- with(X17FA, max(X17FA$Distance, na.rm = TRUE))
+X17FA$HS_Type[is.na(X17FA$HS_Type)] <- "HO"
+
+X17FA$State <- as.character(X17FA$State)
+X17FA$State[is.na(X17FA$State)] <- "International"
+X17FA$State <- as.factor(X17FA$State)
+
+################# use SMOTE to balance the classes ########################
+
+SMOTEAdmits <- SMOTE(Enroll ~ ., Admits, perc.over = 500)
+
+############ split the Admits SMOTE data into training & testing ################
+ind <- sample(2, nrow(SMOTEAdmits), replace = TRUE, prob = c(0.8,0.2))
+trainAdmits <- SMOTEAdmits[ind == 1,]
+testAdmits <- SMOTEAdmits[ind == 2,]
+
+############# Boosting with the SMOTE method applied on the dataset ###################
+set.seed(1234)
+Admits.boost <- boosting(Enroll ~., data = SMOTEAdmits, mfinal=10, coeflearn = "Breiman", control = rpart.control(maxdepth = 3))
+Admits.predboost <- predict.boosting(Admits.boost, newdata = X17FA)
+X17FA$Probabiliy <- Admits.predboost$prob[,2]
+
+write.xlsx(X17FA, "D:/Practicum/Project Data/17FA/17FA_Output.xlsx", sheet = "Output")
+```
+
+  The final command outputes the newly scored data back into an Excel spreadsheet so it can be imported into the admissions CRM system for Admission Counselor use.
 
 ### **Summary**
 
@@ -148,3 +232,9 @@ PrimComps$FA_Intent <- as.factor(PrimComps$FA_Intent)
 ### **References**
 
 SMOTE - https://www.jair.org/media/953/live-953-2037-jair.pdf
+PCA - https://www.analyticsvidhya.com/blog/2016/03/practical-guide-principal-component-analysis-python/
+Random Forest - http://trevorstephens.com/kaggle-titanic-tutorial/r-part-5-random-forests/
+H2o package - https://github.com/h2oai/h2o-tutorials/tree/master/tutorials/deeplearning
+Adabag package - https://cran.r-project.org/web/packages/adabag/adabag.pdf
+
+

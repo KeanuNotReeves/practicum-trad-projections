@@ -80,7 +80,6 @@ testAdmits <- SMOTEAdmits[ind == 2,]
 set.seed(1234)
 Admits.boost <- boosting(Enroll ~., data = SMOTEAdmits, mfinal=10, coeflearn = "Breiman", control = rpart.control(maxdepth = 3))
 Admits.predboost <- predict.boosting(Admits.boost, newdata = X17FA)
-Admits.predboost$prob
 X17FA$Probabiliy <- Admits.predboost$prob[,2]
 
 write.xlsx(X17FA, "D:/Practicum/Project Data/17FA/17FA_Output.xlsx", sheet = "Output")

@@ -146,14 +146,14 @@ library(adabag)
 library(e1071)
 library(xlsx)
 
-#bring in the 15FA & 16FA data
+######################## bring in the 15FA & 16FA data ###########################
 X15FA <- as.data.frame(read_excel("D:/Practicum/Project Data/15FA/15FA Final.xlsx",sheet = "15FA"))
 X16FA <- as.data.frame(read_excel("D:/Practicum/Project Data/16FA/16FA Final.xlsx",sheet = "Final"))
 X17FA <- as.data.frame(read_excel("D:/Practicum/Project Data/17FA/17FA Final.xlsx",sheet = "Final"))
 
 Admits <- rbind(X15FA, X16FA)
 
-#set variable types
+################### set variable types ##########################
 Admits$Gender <- as.factor(Admits$Gender)
 Admits$Ethnic <- as.factor(Admits$Ethnic)
 Admits$Religion <- as.factor(Admits$Religion)
@@ -179,7 +179,7 @@ X17FA$Legacy <- as.factor(X17FA$Legacy)
 X17FA$Regis_Position <- as.factor(X17FA$Regis_Position)
 X17FA$Enroll <- as.factor(X17FA$Enroll)
 
-#Clean the data, removing or replacing NA's
+############## Clean the data, removing or replacing NA's #######################
 which((is.na(Admits$GPA)))
 Admits$GPA[is.na(Admits$GPA)] <- with(Admits, median(Admits$GPA, na.rm = TRUE))
 which((is.na(Admits$GPA)))
@@ -201,24 +201,16 @@ X17FA$State <- as.character(X17FA$State)
 X17FA$State[is.na(X17FA$State)] <- "International"
 X17FA$State <- as.factor(X17FA$State)
 
-#break states into "in-state" and "out-of-state" to simplify the model
-#Admits$State <- as.character(Admits$State)
-#Admits$State[Admits$State == "CO"] <- "In"
-#Admits$State[Admits$State != "In"] <- "Out"
-#Admits$State <- as.factor(Admits$State)
+################# use SMOTE to balance the classes ########################
 
 SMOTEAdmits <- SMOTE(Enroll ~ ., Admits, perc.over = 500)
 
-#################################################################################################
-################################################################################################
-############# Boosting with the SMOTE method applied on the dataset #############
-
-#split the Admits SMOTE data into training & testing
+############ split the Admits SMOTE data into training & testing ################
 ind <- sample(2, nrow(SMOTEAdmits), replace = TRUE, prob = c(0.8,0.2))
 trainAdmits <- SMOTEAdmits[ind == 1,]
 testAdmits <- SMOTEAdmits[ind == 2,]
 
-#boosting method with balanced classes
+############# Boosting with the SMOTE method applied on the dataset ###################
 set.seed(1234)
 Admits.boost <- boosting(Enroll ~., data = SMOTEAdmits, mfinal=10, coeflearn = "Breiman", control = rpart.control(maxdepth = 3))
 Admits.predboost <- predict.boosting(Admits.boost, newdata = X17FA)

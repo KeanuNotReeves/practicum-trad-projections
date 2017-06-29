@@ -2,7 +2,7 @@ library(readxl)
 library(DMwR)
 library(adabag)
 library(e1071)
-
+library(xlsx)
 
 #bring in the 15FA & 16FA data
 X15FA <- as.data.frame(read_excel("D:/Practicum/Project Data/15FA/15FA Final.xlsx",sheet = "15FA"))
@@ -60,10 +60,10 @@ X17FA$State[is.na(X17FA$State)] <- "International"
 X17FA$State <- as.factor(X17FA$State)
 
 #break states into "in-state" and "out-of-state" to simplify the model
-Admits$State <- as.character(Admits$State)
-Admits$State[Admits$State == "CO"] <- "In"
-Admits$State[Admits$State != "In"] <- "Out"
-Admits$State <- as.factor(Admits$State)
+#Admits$State <- as.character(Admits$State)
+#Admits$State[Admits$State == "CO"] <- "In"
+#Admits$State[Admits$State != "In"] <- "Out"
+#Admits$State <- as.factor(Admits$State)
 
 SMOTEAdmits <- SMOTE(Enroll ~ ., Admits, perc.over = 500)
 
@@ -78,16 +78,9 @@ testAdmits <- SMOTEAdmits[ind == 2,]
 
 #boosting method with balanced classes
 set.seed(1234)
-Admits.boost <- boosting(Enroll ~., data = SMOTEAdmits, mfinal=10, coeflearn = "Breiman", control = rpart.control(maxdepth = 10))
-Admits.predboost <- predict.boosting(Admits.boost, newdata = testAdmits)
-Admits.predboost$confusion
-Admits.predboost$error
+Admits.boost <- boosting(Enroll ~., data = SMOTEAdmits, mfinal=10, coeflearn = "Breiman", control = rpart.control(maxdepth = 3))
+Admits.predboost <- predict.boosting(Admits.boost, newdata = X17FA)
+Admits.predboost$prob
+X17FA$Probabiliy <- Admits.predboost$prob[,2]
 
-#boosting with cross validation on Admits with balanced classes
-set.seed(4321)
-SMOTEAdmits.boostcv <- boosting.cv(Enroll~., v=10, data = SMOTEAdmits, mfinal=100)
-SMOTEAdmits.boostcv$confusion
-SMOTEAdmits.boostcv$error
-SMOTEAdmits$Probability <- SMOTEAdmits.boostcv$class
-#write.xlsx(SMOTEAdmits, "D:/Practicum/Project Data/Final.xlsx")
-
+write.xlsx(X17FA, "D:/Practicum/Project Data/17FA/17FA_Output.xlsx", sheet = "Output")

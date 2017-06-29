@@ -112,15 +112,22 @@ ind <- sample(2, nrow(Admits), replace = TRUE, prob = c(0.8,0.2))
 trainAdmits <- Admits[ind == 1,]
 testAdmits <- Admits[ind == 2,]
 
-#boosting method on all Admits
+#bagging on All Admits
 set.seed(1)
+Admits.bagg <- bagging(Enroll ~., data = trainAdmits, mfinal=10, coeflearn = "Breiman", control = rpart.control(maxdepth = 3))
+Admits.predbagg  <- predict.bagging(Admits.bagg , newdata = testAdmits)
+Admits.predbagg$confusion
+Admits.predbagg$error
+
+#boosting method on all Admits
+set.seed(2)
 Admits.boost <- boosting(Enroll ~., data = trainAdmits, mfinal=10, coeflearn = "Breiman", control = rpart.control(maxdepth = 3))
 Admits.predboost <- predict.boosting(Admits.boost, newdata = testAdmits)
 Admits.predboost$confusion
 Admits.predboost$error
 
 #boosting with cross validation on all Admits
-set.seed(2)
+set.seed(3)
 Admits.boostcv <- boosting.cv(Enroll~., v=10, data = Admits, mfinal=100)
 Admits.boostcv$confusion
 Admits.boostcv$error
@@ -131,15 +138,22 @@ Prin <- sample(2, nrow(PrimComps), replace = TRUE, prob = c(0.7,0.3))
 trainPrin <- PrimComps[Prin == 1,]
 testPrin <- PrimComps[Prin==2,]
 
+#bagging on principle components
+set.seed(4)
+Prim.bagg <- bagging(Enroll ~., data = trainPrin, mfinal=10, coeflearn = "Breiman", control = rpart.control(maxdepth = 3))
+Prim.predbagg  <- predict.bagging(Prim.bagg , newdata = testPrin)
+Prim.predbagg$confusion
+Prim.predbagg$error
+
 #boosting method on Principle Components
-set.seed(3)
+set.seed(5)
 Prim.boost <- boosting(Enroll ~., data = trainPrin, mfinal=10, coeflearn = "Breiman", control = rpart.control(maxdepth = 3))
 Prim.predboost <- predict.boosting(Prim.boost, newdata = testPrin)
 Prim.predboost$confusion
 Prim.predboost$error
 
 #boosting with cross validation on the PCA dataset
-set.seed(4)
+set.seed(6)
 PCA.boostcv <- boosting.cv(Enroll~., v=10, data = PrimComps, mfinal=100)
 PCA.boostcv$confusion
 PCA.boostcv$error
@@ -152,6 +166,13 @@ PrimComps$Probability <- PCA.boostcv$class
 ind2 <- sample(2, nrow(Admits2), replace = TRUE, prob = c(0.8,0.2))
 trainAdmits2 <- Admits2[ind2 == 1,]
 testAdmits2 <- Admits2[ind2 == 2,]
+
+#bagging with SMOTE on All Admits
+set.seed(7)
+Admits2.bagg <- bagging(Enroll ~., data = trainAdmits2, mfinal=10, coeflearn = "Breiman", control = rpart.control(maxdepth = 3))
+Admits2.predbagg  <- predict.bagging(Admits2.bagg , newdata = testAdmits2)
+Admits2.predbagg$confusion
+Admits2.predbagg$error
 
 #boosting method with balanced classes
 set.seed(5)
@@ -172,6 +193,13 @@ Admits2$Probability <- Admits2.boostcv$class
 ind4 <- sample(2, nrow(PrimComps2), replace = TRUE, prob = c(0.8,0.2))
 trainPrim2 <- PrimComps2[ind4 == 1,]
 testPrim2 <- PrimComps2[ind4 == 2,]
+
+#bagging method on PCA with SMOTE
+set.seed(7)
+Prim2.bagg <- bagging(Enroll ~., data = trainPrim2, mfinal=10, coeflearn = "Breiman", control = rpart.control(maxdepth = 3))
+Prim2.predbagg  <- predict.bagging(Prim2.bagg , newdata = testPrim2)
+Prim2.predbagg$confusion
+Prim2.predbagg$error
 
 #boosting method on Principle Components
 set.seed(7)

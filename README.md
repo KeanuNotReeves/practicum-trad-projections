@@ -243,4 +243,6 @@ SMOTE - https://www.jair.org/media/953/live-953-2037-jair.pdf
 PCA - https://www.analyticsvidhya.com/blog/2016/03/practical-guide-principal-component-analysis-python/
 Random Forest - http://trevorstephens.com/kaggle-titanic-tutorial/r-part-5-random-forests/
 H2o package - https://github.com/h2oai/h2o-tutorials/tree/master/tutorials/deeplearning
+Adabag package - https://cran.r-project.org/web/packages/adabag/adabag.pdf
+
 

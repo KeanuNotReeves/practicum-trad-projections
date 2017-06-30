@@ -2,7 +2,7 @@
 
   For this project I will use historical application information for Regis University to build a machine learning algorithm to assign a probability to each incoming student of future enrollment.The project was completed using Excel and R.
 
-  In order to complete this I will pull all of the admitted students for the Fall term for the past two academic years (approximately 7,000 stdents). I will pull in each of their academic credentials, as well as biographic and demographic to try and build the algorithm upon.
+  In order to complete this I will pull all of the admitted students for the Fall term for the past two academic years (n = 7,435). I will pull in each of their academic credentials, as well as biographic and demographic to try and build the algorithm upon.
 
 ### **Data Collection**
 
@@ -11,15 +11,17 @@
 
 ### **The Data**    
 
-  The data has 7,000 samples and 16 features including:
+  The data has 7,435 samples and 17 features (12 categorical, 4 numeric, 1 identifier) including:
 
 **ID**: A unique identifier of every student (not their actual student ID).
 
 **Gender**: Male (M) or Female (F)
 
-**Ethnic**: The student's self identified ethnicity (AN = American-Indian/Alaska Native, AS = Asian, BL = Black/African-American,                     HIS =     Hispanic, HP = Hawaiian/Pacific Islander, Multiple = Multiple Ethnicities Reported, NR = Non-Resident Alien,                     Unknown = Unknown, WH = White)
+**Ethnic**: The student's self identified ethnicity (AN = American-Indian/Alaska Native, AS = Asian, BL = Black/African-American,                     HIS = Hispanic, HP = Hawaiian/Pacific Islander, Multiple = Multiple Ethnicities Reported, NR = Non-Resident Alien,                     Unknown = Unknown, WH = White)
 
-**Religion**: The student's self identified religious belief. (BP = Baptist, BU = Buddhist, EP = Episcopalian, GO = Greek Orthodox,                     HU = Hindu, IS = Islam, JW = Jewish, LD = Latter Day Saints, LU = Lutheran, ME = Methodist, NA = Not Applicable,                           OP = Other Protestant, OT = Other, PB = Protestant, RC = Roman Catholic, UN = Unknown)
+**Religion**: The student's self identified religious belief. (BP = Baptist, BU = Buddhist, EP = Episcopalian, GO = Greek Orthodox,                     HU = Hindu, IS = Islam, JW = Jewish, LD = Latter Day Saints, LU = Lutheran, ME = Methodist, NA = Not Applicable,                           OP = Other Protestant, OT = Other, PB = Protestant, RC = Roman Catholic, UN = Unknown)    
+
+** FA_Intent**: Yes, if the student indicated they wanted to submit financial aid paperwork to Regis University.
 
 **First_Gen**: Yes, if the student is the first member of their family to attend college.
 
@@ -225,7 +227,7 @@ write.xlsx(X17FA, "D:/Practicum/Project Data/17FA/17FA_Output.xlsx", sheet = "Ou
 
   The working model created by the analysis is a great first step, and in many ways is Regis University's first foray into the realm of Data Science. The model should be implemented in January 2018, and with that we are hoping to use it to highlight certain ways that we can expand upon our data collection practices to build a better model in the future.     
 
-  What this initial model really highlighted was that if we want to predict who is coming to Regis, we need to look at any data points that reflect how a student feel about Regis University. Test scores, ethnicity, state; none of these things really mattered in the model because they really tell us nothing about the student. What told us everything was: visit, FA_intent, Regis Position and the time between the term and their app being submitted. These data points reflect a student's feelings towards us, and therefore better predict if a student will come here. 
+  What this initial model really highlighted was that if we want to predict who is coming to Regis, we need to look at any data points that reflect how a student feels about Regis University. Test scores, ethnicity, state; none of these things really mattered in the model because they really tell us nothing about the student. What told us everything was: visit, FA_intent, Regis Position and the time between the term and their app being submitted. These data points reflect a student's feelings towards us, and therefore better predict if a student will come here. 
 
   To continue to build upon the model, we hope that showing this to various groups at Regis Universty will propel them to try and collect more data that can provide insight into a student's feelings towards the university. Things like how often the student contacts the their Admissions Counselor, or visits our landing page are items at the top of the list for exploration.
 

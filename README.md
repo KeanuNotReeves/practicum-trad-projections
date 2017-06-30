@@ -21,7 +21,7 @@
 
 **Religion**: The student's self identified religious belief. (BP = Baptist, BU = Buddhist, EP = Episcopalian, GO = Greek Orthodox,                     HU = Hindu, IS = Islam, JW = Jewish, LD = Latter Day Saints, LU = Lutheran, ME = Methodist, NA = Not Applicable,                           OP = Other Protestant, OT = Other, PB = Protestant, RC = Roman Catholic, UN = Unknown)    
 
-** FA_Intent**: Yes, if the student indicated they wanted to submit financial aid paperwork to Regis University.
+**FA_Intent**: Yes, if the student indicated they wanted to submit financial aid paperwork to Regis University.
 
 **First_Gen**: Yes, if the student is the first member of their family to attend college.
 

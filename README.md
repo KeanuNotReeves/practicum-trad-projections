@@ -137,9 +137,9 @@ PrimComps$FA_Intent <- as.factor(PrimComps$FA_Intent)
 #### **Improved Models**
   Using the methods outlined above, I retrained some models to see how using SMOTE and PCA would improve class recall. The table below illustrates the model improvements before and after each method was applied. The table clearly shows that using the SMOTE method dramatically increased the class recall of every model, more so that the PCA did alone, but the two methods together overall, produced the most effective model.
 
-![more models](https://user-images.githubusercontent.com/17519823/28213856-1f472c34-6865-11e7-8a95-30024608b4df.png)
+![more models](https://user-images.githubusercontent.com/17519823/28217454-5d3dd026-6872-11e7-964f-8aa073184c58.png)
 
-  In the end, using Principle Component Analysis did help with modeling as much as the SMOTE technique did. Using SMOTE to balance the classes, we can use either the boosting, or regression algorithm we can build a model off of previous years data to assign a probability of enrollment to new, unscored, data. The final code to compete this task is below. 
+  In the end, using Principle Component Analysis did help with modeling as much as the SMOTE technique did. Using SMOTE to balance the classes, and PCA to simplify the variables we can use either the Neural Net, or the regression algorithm to build a model off of previous years data to assign a probability of enrollment to new, unscored, data. The final code to complete this task is below. 
   
 ```R
 library(readxl)
@@ -149,9 +149,9 @@ library(e1071)
 library(xlsx)
 
 ######################## bring in the 15FA & 16FA data ###########################
-X15FA <- as.data.frame(read_excel("D:/Practicum/Project Data/15FA/15FA Final.xlsx",sheet = "15FA"))
-X16FA <- as.data.frame(read_excel("D:/Practicum/Project Data/16FA/16FA Final.xlsx",sheet = "Final"))
-X17FA <- as.data.frame(read_excel("D:/Practicum/Project Data/17FA/17FA Final.xlsx",sheet = "Final"))
+X15FA <- as.data.frame(read_excel("W:/I-J/IAR_Institutional_Research/Predictive Analytics/Freshman Enrollment Probability/Practicum/Project Data/15FA/15FA Final.xlsx",sheet = "15FA"))
+X16FA <- as.data.frame(read_excel("W:/I-J/IAR_Institutional_Research/Predictive Analytics/Freshman Enrollment Probability/Practicum/Project Data/16FA/16FA Final.xlsx",sheet = "Final"))
+X17FA <- as.data.frame(read_excel("W:/I-J/IAR_Institutional_Research/Predictive Analytics/Freshman Enrollment Probability/Practicum/Project Data/17FA/17FA Final.xlsx",sheet = "Final"))
 
 Admits <- rbind(X15FA, X16FA)
 
@@ -179,7 +179,6 @@ X17FA$Rating <- as.factor(X17FA$Rating)
 X17FA$Visit <- as.factor(X17FA$Visit)
 X17FA$Legacy <- as.factor(X17FA$Legacy)
 X17FA$Regis_Position <- as.factor(X17FA$Regis_Position)
-X17FA$Enroll <- as.factor(X17FA$Enroll)
 
 ############## Clean the data, removing or replacing NA's #######################
 which((is.na(Admits$GPA)))
@@ -203,22 +202,52 @@ X17FA$State <- as.character(X17FA$State)
 X17FA$State[is.na(X17FA$State)] <- "International"
 X17FA$State <- as.factor(X17FA$State)
 
-################# use SMOTE to balance the classes ########################
+Admits$State <- as.character(Admits$State)
+Admits$State[Admits$State == "CO"] <- "In"
+Admits$State[Admits$State != "In"] <- "Out"
+Admits$State <- as.factor(Admits$State)
 
+X17FA$State <- as.character(X17FA$State)
+X17FA$State[X17FA$State == "CO"] <- "In"
+X17FA$State[X17FA$State != "In"] <- "Out"
+X17FA$State <- as.factor(X17FA$State)
+
+which(X17FA$Rating==0)
+X17FA$Rating[c(4333,4342,4359,4360,4387)] <- 1
+
+################# use SMOTE to balance the classes ########################
 SMOTEAdmits <- SMOTE(Enroll ~ ., Admits, perc.over = 500)
 
+################# use PCA to simplify data########################
+PrimComps <- subset(SMOTEAdmits, select = c(Rating, FA_Intent, State, Visit, Time_between_App_and_Term, Regis_Position, Enroll))
+PrimComps$Rating <- as.factor(PrimComps$Rating)
+PrimComps$State <- as.factor(PrimComps$State)
+PrimComps$Visit <- as.factor(PrimComps$Visit)
+PrimComps$FA_Intent <- as.factor(PrimComps$FA_Intent)
+
+PCA17FA <- subset(X17FA, select = c(ID, Rating, FA_Intent, State, Visit, Time_between_App_and_Term, Regis_Position))
+
 ############ split the Admits SMOTE data into training & testing ################
-ind <- sample(2, nrow(SMOTEAdmits), replace = TRUE, prob = c(0.8,0.2))
-trainAdmits <- SMOTEAdmits[ind == 1,]
-testAdmits <- SMOTEAdmits[ind == 2,]
+ind <- sample(2, nrow(PrimComps), replace = TRUE, prob = c(0.8,0.2))
+trainAdmits <- PrimComps[ind == 1,]
+testAdmits <- PrimComps[ind == 2,]
 
-############# Boosting with the SMOTE method applied on the dataset ###################
-set.seed(1234)
-Admits.boost <- boosting(Enroll ~., data = SMOTEAdmits, mfinal=10, coeflearn = "Breiman", control = rpart.control(maxdepth = 3))
-Admits.predboost <- predict.boosting(Admits.boost, newdata = X17FA)
-X17FA$Probabiliy <- Admits.predboost$prob[,2]
+############# Regression with the SMOTE and PCA method applied on the dataset ###################
+#set.seed(5678)
+#regAdmits <- glm(Enroll ~ ., family = "binomial", data = trainAdmits)
+#summary(regAdmits)
+#predAdmits <- predict(regAdmits, newdata = testAdmits, type = "response")
+#class <- predAdmits > 0.30
+#table(testAdmits$Enroll,class)
+#testAdmits$Probability <- predAdmits
 
-write.xlsx(X17FA, "D:/Practicum/Project Data/17FA/17FA_Output.xlsx", sheet = "Output")
+set.seed(4562)
+reg17FA <- glm(Enroll ~ ., family = "binomial", data = PrimComps)
+summary(reg17FA)
+pred17FA <- predict(reg17FA, newdata = PCA17FA, type = "response")
+PCA17FA$Probability <- pred17FA
+summary(PCA17FA$Probability)
+write.xlsx(PCA17FA, "W:/I-J/IAR_Institutional_Research/Predictive Analytics/Freshman Enrollment Probability/Practicum/Project Data/17FA/17FA_Output.xlsx", sheet = "Output")
 ```
 
   The final command outputes the newly scored data back into an Excel spreadsheet so it can be imported into the admissions CRM system for Admission Counselor use.

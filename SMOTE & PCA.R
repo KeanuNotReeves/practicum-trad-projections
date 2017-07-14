@@ -10,8 +10,8 @@ library(party)
 library(corrplot)
 
 #bring in the 15FA & 16FA data
-X15FA <- as.data.frame(read_excel("D:/Practicum/Project Data/15FA/15FA Final.xlsx",sheet = "15FA"))
-X16FA <- as.data.frame(read_excel("D:/Practicum/Project Data/16FA/16FA Final.xlsx",sheet = "Final"))
+X15FA <- as.data.frame(read_excel("W:/I-J/IAR_Institutional_Research/Predictive Analytics/Freshman Enrollment Probability/Practicum/Project Data/15FA/15FA Final.xlsx",sheet = "15FA"))
+X16FA <- as.data.frame(read_excel("W:/I-J/IAR_Institutional_Research/Predictive Analytics/Freshman Enrollment Probability/Practicum/Project Data/16FA/16FA Final.xlsx",sheet = "Final"))
 
 Admits <- rbind(X15FA, X16FA)
 
@@ -210,10 +210,11 @@ Prim2.predboost$error
 
 #boosting with cross validation on the PCA dataset with balanced classes
 set.seed(6)
-PCA.SMOTE.boostcv <- boosting.cv(Enroll~., v=10, data = PrimComps2, mfinal=100)
-PCA.SMOTE.boostcv$confusion
-PCA.SMOTE.boostcv$error
-PrimComps2$Probability <- PCA.SMOTE.boostcv$class
+PCA.SMOTE.boost <- boosting(Enroll~., v=10, data = trainPrim2, mfinal=10, coeflearn = "Breiman", control = rpart.control(maxdepth = 3))
+PCA.SMOTE.predboost <- predict.boosting(PCA.SMOTE.boost, newdata = testPrim2)
+PCA.SMOTE.predboost$confusion
+PCA.SMOTE.predboost$error
+#PrimComps2$Probability <- PCA.SMOTE.boostcv$class
 
 #################################################################################################
 #################################################################################################

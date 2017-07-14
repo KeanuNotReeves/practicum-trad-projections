@@ -135,11 +135,11 @@ PrimComps$FA_Intent <- as.factor(PrimComps$FA_Intent)
 ![scree](https://user-images.githubusercontent.com/17519823/27610309-0dcdf360-5b4b-11e7-89f9-53e24266e23d.png)
 
 #### **Improved Models**
-  Using the methods outlined above, I retrained some models to see how using SMOTE and PCA would improve class recall. The table below illustrates the model improvements before and after each method was applied. The table clearly shows that using the SMOTE method dramatically increased the class recall of every model, more so that the PCA did alone.
+  Using the methods outlined above, I retrained some models to see how using SMOTE and PCA would improve class recall. The table below illustrates the model improvements before and after each method was applied. The table clearly shows that using the SMOTE method dramatically increased the class recall of every model, more so that the PCA did alone, but the two methods together overall, produced the most effective model.
 
-![more models](https://user-images.githubusercontent.com/17519823/27708286-a688b848-5cd5-11e7-949f-68264eab99bc.png)
+![more models](https://user-images.githubusercontent.com/17519823/28213856-1f472c34-6865-11e7-8a95-30024608b4df.png)
 
-  In the end, using Principle Component Analysis did not help with modeling as much as the SMOTE technique did. Using SMOTE to balance the classes, we can use either the boosting, or regression algorithm we can build a model off of previous years data to assign a probability of enrollment to new, unscored, data. THe final code to compete this task is below. 
+  In the end, using Principle Component Analysis did help with modeling as much as the SMOTE technique did. Using SMOTE to balance the classes, we can use either the boosting, or regression algorithm we can build a model off of previous years data to assign a probability of enrollment to new, unscored, data. The final code to compete this task is below. 
   
 ```R
 library(readxl)

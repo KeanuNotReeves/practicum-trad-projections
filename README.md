@@ -2,7 +2,7 @@
 
   For this project I will use historical application information for Regis University to build a machine learning algorithm to assign a probability to each incoming student of future enrollment.The project was completed using Excel and R.
 
-  In order to complete this I will pull all of the admitted students for the Fall term for the past two academic years (approximately 7,000 stdents). I will pull in each of their academic credentials, as well as biographic and demographic to try and build the algorithm upon.
+  In order to complete this I will pull all of the admitted students for the Fall term for the past two academic years (n = 7,435). I will pull in each of their academic credentials, as well as biographic and demographic to try and build the algorithm upon.
 
 ### **Data Collection**
 
@@ -11,15 +11,17 @@
 
 ### **The Data**    
 
-  The data has 7,000 samples and 16 features including:
+  The data has 7,435 samples and 17 features (12 categorical, 4 numeric, 1 identifier) including:
 
 **ID**: A unique identifier of every student (not their actual student ID).
 
 **Gender**: Male (M) or Female (F)
 
-**Ethnic**: The student's self identified ethnicity (AN = American-Indian/Alaska Native, AS = Asian, BL = Black/African-American,                     HIS =     Hispanic, HP = Hawaiian/Pacific Islander, Multiple = Multiple Ethnicities Reported, NR = Non-Resident Alien,                     Unknown = Unknown, WH = White)
+**Ethnic**: The student's self identified ethnicity (AN = American-Indian/Alaska Native, AS = Asian, BL = Black/African-American,                     HIS = Hispanic, HP = Hawaiian/Pacific Islander, Multiple = Multiple Ethnicities Reported, NR = Non-Resident Alien,                     Unknown = Unknown, WH = White)
 
-**Religion**: The student's self identified religious belief. (BP = Baptist, BU = Buddhist, EP = Episcopalian, GO = Greek Orthodox,                     HU = Hindu, IS = Islam, JW = Jewish, LD = Latter Day Saints, LU = Lutheran, ME = Methodist, NA = Not Applicable,                           OP = Other Protestant, OT = Other, PB = Protestant, RC = Roman Catholic, UN = Unknown)
+**Religion**: The student's self identified religious belief. (BP = Baptist, BU = Buddhist, EP = Episcopalian, GO = Greek Orthodox,                     HU = Hindu, IS = Islam, JW = Jewish, LD = Latter Day Saints, LU = Lutheran, ME = Methodist, NA = Not Applicable,                           OP = Other Protestant, OT = Other, PB = Protestant, RC = Roman Catholic, UN = Unknown)    
+
+**FA_Intent**: Yes, if the student indicated they intended to submit financial aid paperwork to Regis University.
 
 **First_Gen**: Yes, if the student is the first member of their family to attend college.
 
@@ -133,11 +135,11 @@ PrimComps$FA_Intent <- as.factor(PrimComps$FA_Intent)
 ![scree](https://user-images.githubusercontent.com/17519823/27610309-0dcdf360-5b4b-11e7-89f9-53e24266e23d.png)
 
 #### **Improved Models**
-  Using the methods outlined above, I retrained some models to see how using SMOTE and PCA would improve class recall. The table below illustrates the model improvements before and after each method was applied. The table clearly shows that using the SMOTE method dramatically increased the class recall of every model, more so that the PCA did alone.
+  Using the methods outlined above, I retrained some models to see how using SMOTE and PCA would improve class recall. The table below illustrates the model improvements before and after each method was applied. The table clearly shows that using the SMOTE method dramatically increased the class recall of every model, more so that the PCA did alone, but the two methods together overall, produced the most effective model.
 
-![more models](https://user-images.githubusercontent.com/17519823/27708286-a688b848-5cd5-11e7-949f-68264eab99bc.png)
+![more models](https://user-images.githubusercontent.com/17519823/28218232-211e5540-6875-11e7-818c-27b66d0a8f12.png)
 
-  In the end, using Principle Component Analysis did not help with modeling as much as the SMOTE technique did. Using SMOTE to balance the classes, we can use either the boosting, or regression algorithm we can build a model off of previous years data to assign a probability of enrollment to new, unscored, data. THe final code to compete this task is below. 
+  In the end, using Principle Component Analysis did help with modeling as much as the SMOTE technique did. Using SMOTE to balance the classes, and PCA to simplify the variables we can use either the Neural Net, or the regression algorithm to build a model off of previous years data to assign a probability of enrollment to new, unscored, data. The final code to complete this task is below. 
   
 ```R
 library(readxl)
@@ -147,9 +149,9 @@ library(e1071)
 library(xlsx)
 
 ######################## bring in the 15FA & 16FA data ###########################
-X15FA <- as.data.frame(read_excel("D:/Practicum/Project Data/15FA/15FA Final.xlsx",sheet = "15FA"))
-X16FA <- as.data.frame(read_excel("D:/Practicum/Project Data/16FA/16FA Final.xlsx",sheet = "Final"))
-X17FA <- as.data.frame(read_excel("D:/Practicum/Project Data/17FA/17FA Final.xlsx",sheet = "Final"))
+X15FA <- as.data.frame(read_excel("W:/I-J/IAR_Institutional_Research/Predictive Analytics/Freshman Enrollment Probability/Practicum/Project Data/15FA/15FA Final.xlsx",sheet = "15FA"))
+X16FA <- as.data.frame(read_excel("W:/I-J/IAR_Institutional_Research/Predictive Analytics/Freshman Enrollment Probability/Practicum/Project Data/16FA/16FA Final.xlsx",sheet = "Final"))
+X17FA <- as.data.frame(read_excel("W:/I-J/IAR_Institutional_Research/Predictive Analytics/Freshman Enrollment Probability/Practicum/Project Data/17FA/17FA Final.xlsx",sheet = "Final"))
 
 Admits <- rbind(X15FA, X16FA)
 
@@ -177,7 +179,6 @@ X17FA$Rating <- as.factor(X17FA$Rating)
 X17FA$Visit <- as.factor(X17FA$Visit)
 X17FA$Legacy <- as.factor(X17FA$Legacy)
 X17FA$Regis_Position <- as.factor(X17FA$Regis_Position)
-X17FA$Enroll <- as.factor(X17FA$Enroll)
 
 ############## Clean the data, removing or replacing NA's #######################
 which((is.na(Admits$GPA)))
@@ -201,22 +202,52 @@ X17FA$State <- as.character(X17FA$State)
 X17FA$State[is.na(X17FA$State)] <- "International"
 X17FA$State <- as.factor(X17FA$State)
 
-################# use SMOTE to balance the classes ########################
+Admits$State <- as.character(Admits$State)
+Admits$State[Admits$State == "CO"] <- "In"
+Admits$State[Admits$State != "In"] <- "Out"
+Admits$State <- as.factor(Admits$State)
 
+X17FA$State <- as.character(X17FA$State)
+X17FA$State[X17FA$State == "CO"] <- "In"
+X17FA$State[X17FA$State != "In"] <- "Out"
+X17FA$State <- as.factor(X17FA$State)
+
+which(X17FA$Rating==0)
+X17FA$Rating[c(4333,4342,4359,4360,4387)] <- 1
+
+################# use SMOTE to balance the classes ########################
 SMOTEAdmits <- SMOTE(Enroll ~ ., Admits, perc.over = 500)
 
+################# use PCA to simplify data########################
+PrimComps <- subset(SMOTEAdmits, select = c(Rating, FA_Intent, State, Visit, Time_between_App_and_Term, Regis_Position, Enroll))
+PrimComps$Rating <- as.factor(PrimComps$Rating)
+PrimComps$State <- as.factor(PrimComps$State)
+PrimComps$Visit <- as.factor(PrimComps$Visit)
+PrimComps$FA_Intent <- as.factor(PrimComps$FA_Intent)
+
+PCA17FA <- subset(X17FA, select = c(ID, Rating, FA_Intent, State, Visit, Time_between_App_and_Term, Regis_Position))
+
 ############ split the Admits SMOTE data into training & testing ################
-ind <- sample(2, nrow(SMOTEAdmits), replace = TRUE, prob = c(0.8,0.2))
-trainAdmits <- SMOTEAdmits[ind == 1,]
-testAdmits <- SMOTEAdmits[ind == 2,]
+ind <- sample(2, nrow(PrimComps), replace = TRUE, prob = c(0.8,0.2))
+trainAdmits <- PrimComps[ind == 1,]
+testAdmits <- PrimComps[ind == 2,]
 
-############# Boosting with the SMOTE method applied on the dataset ###################
-set.seed(1234)
-Admits.boost <- boosting(Enroll ~., data = SMOTEAdmits, mfinal=10, coeflearn = "Breiman", control = rpart.control(maxdepth = 3))
-Admits.predboost <- predict.boosting(Admits.boost, newdata = X17FA)
-X17FA$Probabiliy <- Admits.predboost$prob[,2]
+############# Regression with the SMOTE and PCA method applied on the dataset ###################
+#set.seed(5678)
+#regAdmits <- glm(Enroll ~ ., family = "binomial", data = trainAdmits)
+#summary(regAdmits)
+#predAdmits <- predict(regAdmits, newdata = testAdmits, type = "response")
+#class <- predAdmits > 0.30
+#table(testAdmits$Enroll,class)
+#testAdmits$Probability <- predAdmits
 
-write.xlsx(X17FA, "D:/Practicum/Project Data/17FA/17FA_Output.xlsx", sheet = "Output")
+set.seed(4562)
+reg17FA <- glm(Enroll ~ ., family = "binomial", data = PrimComps)
+summary(reg17FA)
+pred17FA <- predict(reg17FA, newdata = PCA17FA, type = "response")
+PCA17FA$Probability <- pred17FA
+summary(PCA17FA$Probability)
+write.xlsx(PCA17FA, "W:/I-J/IAR_Institutional_Research/Predictive Analytics/Freshman Enrollment Probability/Practicum/Project Data/17FA/17FA_Output.xlsx", sheet = "Output")
 ```
 
   The final command outputes the newly scored data back into an Excel spreadsheet so it can be imported into the admissions CRM system for Admission Counselor use.
@@ -225,16 +256,16 @@ write.xlsx(X17FA, "D:/Practicum/Project Data/17FA/17FA_Output.xlsx", sheet = "Ou
 
   The working model created by the analysis is a great first step, and in many ways is Regis University's first foray into the realm of Data Science. The model should be implemented in January 2018, and with that we are hoping to use it to highlight certain ways that we can expand upon our data collection practices to build a better model in the future.     
 
-  What this initial model really highlighted was that if we want to predict who is coming to Regis, we need to look at any data points that reflect how a student feel about Regis University. Test scores, ethnicity, state; none of these things really mattered in the model because they really tell us nothing about the student. What told us everything was: visit, FA_intent, Regis Position and the time between the term and their app being submitted. These data points reflect a student's feelings towards us, and therefore better predict if a student will come here. 
+  What this initial model really highlighted was that if we want to predict who is coming to Regis, we need to look at any data points that reflect how a student feels about Regis University. Test scores, ethnicity, state; none of these things really mattered in the model because they really tell us nothing about the student. What told us everything was: visit, FA_intent, Regis Position and the time between the term and their app being submitted. These data points reflect a student's feelings towards us, and therefore better predict if a student will come here. 
 
   To continue to build upon the model, we hope that showing this to various groups at Regis Universty will propel them to try and collect more data that can provide insight into a student's feelings towards the university. Things like how often the student contacts the their Admissions Counselor, or visits our landing page are items at the top of the list for exploration.
 
 ### **References**
 
-SMOTE - https://www.jair.org/media/953/live-953-2037-jair.pdf
-PCA - https://www.analyticsvidhya.com/blog/2016/03/practical-guide-principal-component-analysis-python/
-Random Forest - http://trevorstephens.com/kaggle-titanic-tutorial/r-part-5-random-forests/
-H2o package - https://github.com/h2oai/h2o-tutorials/tree/master/tutorials/deeplearning
-Adabag package - https://cran.r-project.org/web/packages/adabag/adabag.pdf
+SMOTE - https://www.jair.org/media/953/live-953-2037-jair.pdf    
+PCA - https://www.analyticsvidhya.com/blog/2016/03/practical-guide-principal-component-analysis-python/    
+Random Forest - http://trevorstephens.com/kaggle-titanic-tutorial/r-part-5-random-forests/    
+H2o package - https://github.com/h2oai/h2o-tutorials/tree/master/tutorials/deeplearning    
+Adabag package - https://cran.r-project.org/web/packages/adabag/adabag.pdf    
 
 

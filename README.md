@@ -137,7 +137,7 @@ PrimComps$FA_Intent <- as.factor(PrimComps$FA_Intent)
 #### **Improved Models**
   Using the methods outlined above, I retrained some models to see how using SMOTE and PCA would improve class recall. The table below illustrates the model improvements before and after each method was applied. The table clearly shows that using the SMOTE method dramatically increased the class recall of every model, more so that the PCA did alone, but the two methods together overall, produced the most effective model.
 
-![more models](https://user-images.githubusercontent.com/17519823/28217454-5d3dd026-6872-11e7-964f-8aa073184c58.png)
+![more models](https://user-images.githubusercontent.com/17519823/28218232-211e5540-6875-11e7-818c-27b66d0a8f12.png)
 
   In the end, using Principle Component Analysis did help with modeling as much as the SMOTE technique did. Using SMOTE to balance the classes, and PCA to simplify the variables we can use either the Neural Net, or the regression algorithm to build a model off of previous years data to assign a probability of enrollment to new, unscored, data. The final code to complete this task is below. 
   
